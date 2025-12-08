@@ -20,6 +20,10 @@ A complete auction platform built with the MERN stack (MongoDB, Express.js, Reac
 - For production, it expects the backend to be deployed and the URL updated in `vite.config.js`
 - The CORS configuration in the backend is set to allow requests from `https://bidverse-auction-platform.vercel.app`
 
+### API Configuration
+- In development: Frontend makes requests to `/api` which are proxied to `http://localhost:6001`
+- In production: Frontend makes direct requests to `https://bidverse-auction-platform.onrender.com/api`
+
 ## Local Development Setup
 
 ### Prerequisites
