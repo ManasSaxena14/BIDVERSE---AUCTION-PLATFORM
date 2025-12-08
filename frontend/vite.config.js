@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
     proxy: {
       '/api': {
         target: mode === 'production' 
-          ? 'https://your-render-backend-url.onrender.com' 
+          ? 'https://bidverse-auction-platform.onrender.com' 
           : 'http://localhost:6001',
         changeOrigin: true
       }

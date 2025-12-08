@@ -13,8 +13,7 @@ A complete auction platform built with the MERN stack (MongoDB, Express.js, Reac
   - `PORT` - Port for the server (Render will set this automatically)
   - `NODE_ENV` - Set to "production"
 
-**IMPORTANT**: After deploying the backend to Render, update the target URL in `frontend/vite.config.js`:
-- Replace `https://your-render-backend-url.onrender.com` with your actual Render backend URL
+**IMPORTANT**: The backend is now deployed at `https://bidverse-auction-platform.onrender.com` and configured in `frontend/vite.config.js`
 
 ### Frontend Deployment (Vercel)
 - The frontend is configured to work with both local development and production environments
