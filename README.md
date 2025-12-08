@@ -1,142 +1,27 @@
-# 🎯 MERN Auction Platform
+# BIDVERSE - AUCTION PLATFORM
 
-A complete, beginner-friendly auction platform built with MongoDB Atlas, Express, React, Node.js, JWT authentication, and role-based access control (RBAC).
+A complete auction platform built with the MERN stack (MongoDB, Express.js, React, Node.js) featuring JWT authentication, role-based access control (RBAC), real-time bidding, and a review system.
 
-## ✨ Features
+## Deployment Notes
 
-### Backend Features
-- ✅ JWT Authentication
-- ✅ Role-Based Access Control (Bidder, Auctioneer, Superadmin)
-- ✅ MongoDB Atlas Integration
-- ✅ Complete CRUD Operations for Auction Items and Bids
-- ✅ Advanced Filtering, Pagination, Search, and Sorting
-- ✅ Authorization Middleware
-- ✅ Password Hashing with bcrypt
-- ✅ Review System for Completed Auctions
+### Backend Deployment (Render)
+- Build Command: `yarn install --production`
+- Start Command: `yarn start`
+- Environment Variables Required:
+  - `MONGO_URI` - MongoDB Atlas connection string
+  - `JWT_SECRET` - Secret key for JWT token generation
+  - `PORT` - Port for the server (Render will set this automatically)
+  - `NODE_ENV` - Set to "production"
 
-### Frontend Features
-- ✅ React with Vite
-- ✅ Tailwind CSS for styling
-- ✅ Context API for state management
-- ✅ Protected routes based on user roles
-- ✅ Responsive design
-- ✅ Clean and intuitive UI
-- ✅ Toast notifications
-- ✅ Real-time bidding interface
+**IMPORTANT**: After deploying the backend to Render, update the target URL in `frontend/vite.config.js`:
+- Replace `https://your-render-backend-url.onrender.com` with your actual Render backend URL
 
-### User Roles & Permissions
+### Frontend Deployment (Vercel)
+- The frontend is configured to work with both local development and production environments
+- For production, it expects the backend to be deployed and the URL updated in `vite.config.js`
+- The CORS configuration in the backend is set to allow requests from `https://bidverse-auction-platform.vercel.app`
 
-**Bidder:**
-- View all auction items
-- Place bids on items
-- Update their own bids
-- Delete their own bids
-- Leave reviews on completed auctions they participated in
-
-**Auctioneer:**
-- Create auction items
-- Update their own auction items
-- Delete their own auction items
-- View bids on their items
-
-**Superadmin:**
-- Perform ANY CRUD operation
-- Delete ANY auction item
-- Delete ANY bid
-- Full system control
-
-> **Note:** Superadmin CANNOT be created via signup API. Must be manually created in MongoDB Atlas.
-
----
-
-## 📁 Project Structure
-
-```
-QODER AUCTION/
-├── backend/
-│   ├── config/
-│   │   └── db.js
-│   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── bidController.js
-│   │   ├── itemController.js
-│   │   ├── reviewController.js
-│   │   ├── userController.js
-│   │   └── commissionController.js
-│   ├── middleware/
-│   │   ├── auth.js
-│   │   └── authorization.js
-│   ├── models/
-│   │   ├── AuctionItem.js
-│   │   ├── Bid.js
-│   │   ├── Review.js
-│   │   ├── User.js
-│   │   └── Commission.js
-│   ├── routes/
-│   │   ├── authRoutes.js
-│   │   ├── bidRoutes.js
-│   │   ├── itemRoutes.js
-│   │   ├── reviewRoutes.js
-│   │   ├── userRoutes.js
-│   │   └── commissionRoutes.js
-│   ├── .env.example
-│   ├── .gitignore
-│   ├── package.json
-│   ├── server.js
-│   └── README.md          # Detailed backend documentation
-│
-└── frontend/
-    ├── public/
-    ├── src/
-    │   ├── components/
-    │   │   ├── BidList.jsx
-    │   │   ├── ItemCard.jsx
-    │   │   ├── Navbar.jsx
-    │   │   ├── Footer.jsx
-    │   │   ├── ProtectedRoute.jsx
-    │   │   ├── Toast.jsx
-    │   │   └── ReviewForm.jsx
-    │   ├── context/
-    │   │   ├── AuthContext.jsx
-    │   │   ├── ItemContext.jsx
-    │   │   ├── BidContext.jsx
-    │   │   ├── ToastContext.jsx
-    │   │   └── ReviewContext.jsx
-    │   ├── pages/
-    │   │   ├── Home.jsx
-    │   │   ├── ItemDetails.jsx
-    │   │   ├── CreateItem.jsx
-    │   │   ├── UpdateItem.jsx
-    │   │   ├── PlaceBid.jsx
-    │   │   ├── UpdateBid.jsx
-    │   │   ├── Login.jsx
-    │   │   ├── Signup.jsx
-    │   │   ├── UserProfile.jsx
-    │   │   ├── EditProfile.jsx
-    │   │   ├── Categories.jsx
-    │   │   ├── CategoryItems.jsx
-    │   │   ├── Leaderboard.jsx
-    │   │   ├── About.jsx
-    │   │   ├── ViewMyAuctions.jsx
-    │   │   └── ViewAuctionDetails.jsx
-    │   ├── services/
-    │   │   ├── api.js
-    │   │   └── index.js
-    │   ├── App.jsx
-    │   ├── index.css
-    │   └── main.jsx
-    ├── .gitignore
-    ├── index.html
-    ├── package.json
-    ├── postcss.config.js
-    ├── tailwind.config.js
-    ├── vite.config.js
-    └── README.md           # Detailed frontend documentation
-```
-
----
-
-## 🚀 Installation & Setup
+## Local Development Setup
 
 ### Prerequisites
 - Node.js (v16 or higher)
