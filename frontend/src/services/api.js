@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = '/api';
+// Use full backend URL in production, relative path in development
+const API_URL = import.meta.env.MODE === 'production' 
+  ? 'https://bidverse-auction-platform.onrender.com/api'
+  : '/api';
 
 // Create axios instance
 const api = axios.create({
