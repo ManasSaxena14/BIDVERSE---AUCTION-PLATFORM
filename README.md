@@ -40,7 +40,6 @@ See [backend/README.md](backend/README.md) for detailed backend setup instructio
 cd backend
 npm install
 cp .env.example .env
-# Edit .env with your MongoDB credentials
 npm run dev
 ```
 
@@ -77,7 +76,7 @@ Since superadmin cannot be created via the signup API, you must manually insert 
 {
   "name": "Super Admin",
   "email": "admin@auction.com",
-  "password": "$2a$10$rG4.YLL/Rnay9F3UtDa0OuJR3fWRbDhF9L3XX.QCZDCdzRFX.GkZu", // "admin123" hashed
+  "password": "$2a$10$rG4.YLL/Rnay9F3UtDa0OuJR3fWRbDhF9L3XX.QCZDCdzRFX.GkZu", 
   "role": "superadmin"
 }
 ```
@@ -96,10 +95,8 @@ Since superadmin cannot be created via the signup API, you must manually insert 
 Create a script to insert the superadmin user:
 
 ```javascript
-// create-superadmin.js
 const mongoose = require('mongoose');
 
-// Connect to your MongoDB Atlas
 mongoose.connect('your-mongodb-uri');
 
 const User = require('./backend/models/User');
@@ -109,7 +106,7 @@ const createSuperAdmin = async () => {
     const superAdmin = new User({
       name: 'Super Admin',
       email: 'admin@auction.com',
-      password: 'admin123', // Will be hashed automatically
+      password: 'admin123', 
       role: 'superadmin'
     });
 

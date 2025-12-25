@@ -141,7 +141,7 @@ const CreateItem = () => {
                 value={formData.image}
                 onChange={handleChange}
                 className="w-full px-6 py-4 bg-[#0D0D0D] border-2 border-[#D4AF37]/30 rounded-xl text-[#F7F7F7] text-lg focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 transition-all duration-300 placeholder-[#E5E4E2]/50"
-                placeholder="https://example.com/item-image.jpg"
+                
               />
               <p className="text-sm text-[#E5E4E2]/70 mt-2 font-light tracking-wide">
                 High-resolution images are recommended for luxury items

@@ -1,11 +1,11 @@
 import axios from 'axios';
 
-// Use full backend URL in production, relative path in development
+
 const API_URL = import.meta.env.MODE === 'production' 
   ? 'https://bidverse-auction-platform.onrender.com/api'
   : '/api';
 
-// Create axios instance
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -13,9 +13,10 @@ const api = axios.create({
   }
 });
 
-// Add token to requests if available
+
 api.interceptors.request.use(
   (config) => {
+    console.log('API Request:', config.method?.toUpperCase(), config.baseURL, config.url);
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -23,14 +24,16 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('API Request Error:', error);
     return Promise.reject(error);
   }
 );
 
-// Handle response errors globally
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API Response Error:', error.response?.status, error.response?.data);
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');

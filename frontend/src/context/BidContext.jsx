@@ -20,8 +20,8 @@ export const BidProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      // Fetch all bids for leaderboard by setting a high limit
-      // For leaderboard, we want highest bids first
+      
+      
       const response = await bidService.getBids({ ...params, limit: 1000, sort: 'amount_desc' });
       setBids(response.bids);
       return response;

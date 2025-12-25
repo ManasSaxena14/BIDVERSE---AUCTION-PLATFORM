@@ -110,7 +110,7 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
-      {/* Luxury Hero Section */}
+      
       <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#1A1A1A] to-black overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -131,7 +131,7 @@ const About = () => {
         </div>
       </div>
 
-      {/* Mission Section */}
+      
       <div className="max-w-7xl mx-auto px-4 py-20">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
@@ -175,7 +175,7 @@ const About = () => {
         </div>
       </div>
 
-      {/* Stats Section */}
+      
       <div className="bg-gradient-to-r from-[#1A1A1A] via-[#0D0D0D] to-black border-y border-[#D4AF37]/30 py-20">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
@@ -189,7 +189,7 @@ const About = () => {
         </div>
       </div>
 
-      {/* Features Section */}
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-[#F7F7F7] mb-4 tracking-wide">WHY CHOOSE BIDVERSE?</h2>
@@ -209,7 +209,7 @@ const About = () => {
         </div>
       </div>
 
-      {/* How It Works - For Buyers */}
+      
       <div className="bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A] py-20 border-y border-[#D4AF37]/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -239,7 +239,7 @@ const About = () => {
         </div>
       </div>
 
-      {/* How It Works - For Sellers */}
+      
       <div className="py-20 bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -269,7 +269,7 @@ const About = () => {
         </div>
       </div>
 
-      {/* FAQ Section */}
+      
       <div className="bg-gradient-to-br from-[#1A1A1A] to-black py-20 border-y border-[#D4AF37]/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -294,7 +294,7 @@ const About = () => {
         </div>
       </div>
 
-      {/* CTA Section */}
+      
       <div className="bg-gradient-to-br from-[#0D0D0D] via-[#1A1A1A] to-black py-24 border-y border-[#D4AF37]/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-[#F7F7F7] mb-6 tracking-wide">

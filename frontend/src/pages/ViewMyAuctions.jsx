@@ -12,15 +12,27 @@ const ViewMyAuctions = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('latest');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     loadMyAuctions();
-  }, [user]);
+  }, [user, filter, sortBy, currentPage]);
 
   const loadMyAuctions = async () => {
     try {
       setLoading(true);
-      await fetchItems({ limit: 100, createdBy: user._id });
+      const params = {
+        createdBy: user._id,
+        status: filter === 'all' ? undefined : filter,
+        page: currentPage,
+        limit: itemsPerPage
+      };
+      const response = await fetchItems(params);
+      setTotalPages(response.pages || 1);
+      setTotalItems(response.total || 0);
     } catch (error) {
       console.error('Failed to load auctions:', error);
     } finally {
@@ -107,7 +119,6 @@ const ViewMyAuctions = () => {
   const stats = {
     total: myAuctions ? myAuctions.length : 0,
     active: myAuctions ? myAuctions.filter(a => a.status === 'active').length : 0,
-    sold: myAuctions ? myAuctions.filter(a => a.status === 'sold').length : 0,
     totalRevenue: myAuctions ? myAuctions.reduce((sum, a) => sum + (a.currentBid || 0), 0) : 0
   };
 
@@ -124,7 +135,6 @@ const ViewMyAuctions = () => {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
-      {/* Header */}
       <div className="bg-gradient-to-r from-[#0D0D0D] to-[#1A1A1A] border-b border-[#D4AF37]/30 py-12">
         <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-4xl md:text-5xl font-bold text-[#F7F7F7] mb-4 tracking-wide">MY AUCTIONS</h1>
@@ -132,9 +142,8 @@ const ViewMyAuctions = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 -mt-8 mb-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-6 hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all duration-300">
             <div className="text-3xl mb-2 text-[#D4AF37]">📦</div>
             <div className="text-3xl font-bold text-[#F7F7F7]">{stats.total}</div>
@@ -146,11 +155,6 @@ const ViewMyAuctions = () => {
             <div className="text-sm text-[#E5E4E2]/70 tracking-wider uppercase">Active</div>
           </div>
           <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-6 hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all duration-300">
-            <div className="text-3xl mb-2 text-[#D4AF37]">🎉</div>
-            <div className="text-3xl font-bold text-blue-500">{stats.sold}</div>
-            <div className="text-sm text-[#E5E4E2]/70 tracking-wider uppercase">Sold</div>
-          </div>
-          <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-6 hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all duration-300">
             <div className="text-3xl mb-2 text-[#D4AF37]">💰</div>
             <div className="text-3xl font-bold text-purple-500">${stats.totalRevenue.toLocaleString()}</div>
             <div className="text-sm text-[#E5E4E2]/70 tracking-wider uppercase">Total Revenue</div>
@@ -159,15 +163,16 @@ const ViewMyAuctions = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 pb-12">
-        {/* Filters and Actions */}
         <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Filter Tabs */}
             <div className="flex gap-2 flex-wrap">
-              {['all', 'active', 'sold', 'closed'].map((status) => (
+              {['all', 'active', 'closed'].map((status) => (
                 <button
                   key={status}
-                  onClick={() => setFilter(status)}
+                  onClick={() => {
+                    setFilter(status);
+                    setCurrentPage(1); // Reset to first page when changing filter
+                  }}
                   className={`px-4 py-2 rounded-xl font-bold tracking-wider transition-all duration-300 ${
                     filter === status
                       ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] shadow-lg hover:shadow-[0_0_18px_rgba(212,175,55,0.4)]'
@@ -179,8 +184,7 @@ const ViewMyAuctions = () => {
               ))}
             </div>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <label className="text-[#E5E4E2] font-bold tracking-wider uppercase">Sort by:</label>
               <select
                 value={sortBy}
@@ -204,7 +208,6 @@ const ViewMyAuctions = () => {
           </div>
         </div>
 
-        {/* Auctions Grid */}
         {myAuctions.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {myAuctions.map((auction) => (
@@ -212,7 +215,6 @@ const ViewMyAuctions = () => {
                 key={auction._id}
                 className="bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] border border-[#D4AF37]/20 rounded-2xl shadow-2xl overflow-hidden hover:shadow-[0_20px_40px_rgba(212,175,55,0.3)] transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02]"
               >
-                {/* Image */}
                 <div className="relative h-56 overflow-hidden">
                   <img 
                     src={auction.image || 'https://via.placeholder.com/400x300?text=No+Image'}
@@ -235,7 +237,6 @@ const ViewMyAuctions = () => {
                   )}
                 </div>
 
-                {/* Content */}
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-[#F7F7F7] mb-3 line-clamp-1 tracking-wide">
                     {auction.title}
@@ -244,7 +245,6 @@ const ViewMyAuctions = () => {
                     {auction.description}
                   </p>
 
-                  {/* Stats */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="bg-[#0D0D0D] p-3 rounded-xl border border-[#D4AF37]/20">
                       <div className="text-xs text-[#D4AF37]/80 mb-1 tracking-wider uppercase">Current Bid</div>
@@ -261,7 +261,6 @@ const ViewMyAuctions = () => {
                     <span className="tracking-wider uppercase">📅 {new Date(auction.createdAt).toLocaleDateString()}</span>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex gap-2">
                     <Link
                       to={`/items/${auction._id}`}
@@ -305,6 +304,61 @@ const ViewMyAuctions = () => {
             >
               CREATE YOUR FIRST AUCTION
             </Link>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="mt-12 flex flex-col items-center">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg font-bold tracking-wider ${
+                  currentPage === 1
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-[#D4AF37] text-[#0D0D0D] hover:bg-[#E5E4E2] transition-all'
+                }`}
+              >
+                Previous
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-4 py-2 rounded-lg font-bold tracking-wider ${
+                        currentPage === page
+                          ? 'bg-[#D4AF37] text-[#0D0D0D]'
+                          : 'bg-[#1A1A1A] text-[#E5E4E2] border border-[#D4AF37]/30 hover:bg-[#D4AF37]/20'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                } else if (page === currentPage - 2 || page === currentPage + 2) {
+                  return <span key={page} className="px-2">...</span>;
+                }
+                return null;
+              })}
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-lg font-bold tracking-wider ${
+                  currentPage === totalPages
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-[#D4AF37] text-[#0D0D0D] hover:bg-[#E5E4E2] transition-all'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+            
+            <p className="mt-4 text-[#E5E4E2]/70 text-sm">
+              Page {currentPage} of {totalPages} ({totalItems} total auctions)
+            </p>
           </div>
         )}
       </div>

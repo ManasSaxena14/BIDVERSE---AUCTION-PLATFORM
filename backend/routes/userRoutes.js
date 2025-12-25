@@ -10,7 +10,7 @@ const { authorize } = require('../middleware/authorization');
 
 const router = express.Router();
 
-// All routes require superadmin
+
 router.use(protect, authorize('superadmin'));
 
 router.get('/', getAllUsers);

@@ -26,9 +26,9 @@ const Navbar = () => {
     <nav className="bg-[#0D0D0D] shadow-2xl sticky top-0 z-50 border-b border-[#D4AF37]/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Left side - Logo and Website Name */}
+          
           <div className="flex items-center">
-            {/* Logo and Website Name at the far left */}
+            
             <div className="flex items-center">
               <Link to="/" className="flex items-center space-x-3 group">
                 <img src={logo} alt="BidVerse" className="h-12 w-auto transform group-hover:scale-110 transition-transform duration-300" />
@@ -40,7 +40,7 @@ const Navbar = () => {
               </Link>
             </div>
 
-            {/* Search Bar - Desktop (hidden for auctioneers) */}
+            
             {user?.role !== 'auctioneer' && (
               <div className="hidden md:flex max-w-lg ml-8">
                 <form onSubmit={handleSearch} className="w-full">
@@ -61,7 +61,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Right side - Navigation Links */}
+          
           <div className={`hidden lg:flex items-center ${user?.role === 'auctioneer' ? 'space-x-0.5' : 'space-x-1'}`}>
             <Link to="/" className={`text-[#F7F7F7] hover:text-[#D4AF37] rounded-xl font-medium transition-all duration-300 hover:bg-white/5 flex items-center ${user?.role === 'auctioneer' ? 'px-3 py-2' : 'px-4 py-2'}`}>
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,7 +153,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
+          
           <div className="lg:hidden flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -170,7 +170,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Search (hidden for auctioneers) */}
+        
         {user?.role !== 'auctioneer' && (
           <div className="md:hidden pb-3">
             <form onSubmit={handleSearch}>
@@ -191,7 +191,7 @@ const Navbar = () => {
         )}
       </div>
 
-      {/* Mobile Menu */}
+      
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-[#D4AF37]/30 bg-[#1A1A1A]">
           <div className="px-4 py-3 space-y-1">

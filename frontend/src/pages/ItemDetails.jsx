@@ -14,19 +14,21 @@ const ItemDetails = () => {
   const { fetchItemById, deleteItem } = useItems();
   const { deleteBid } = useBids();
   const { addToast } = useToast();
-  const { createReview } = useReviews();
+  const { createReview, getReviewsByAuction } = useReviews();
   const navigate = useNavigate();
 
   const [item, setItem] = useState(null);
   const [bids, setBids] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
     loadItemDetails();
   }, [id]);
 
-  // Refresh data when component comes back into focus (e.g., after updating a bid)
+  
   useEffect(() => {
     const handleFocus = () => {
       loadItemDetails();
@@ -37,6 +39,10 @@ const ItemDetails = () => {
       window.removeEventListener('focus', handleFocus);
     };
   }, [id]);
+
+  const renderStars = (rating) => {
+    return '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
+  };
 
   const loadItemDetails = async () => {
     try {
@@ -49,6 +55,21 @@ const ItemDetails = () => {
       addToast('Failed to load item details', 'error');
     } finally {
       setLoading(false);
+      
+      loadReviews();
+    }
+  };
+
+  const loadReviews = async () => {
+    try {
+      setReviewsLoading(true);
+      const reviewsResponse = await getReviewsByAuction(id);
+      setReviews(reviewsResponse.reviews);
+    } catch (error) {
+      console.error('Failed to load reviews:', error);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
     }
   };
 
@@ -80,6 +101,7 @@ const ItemDetails = () => {
     navigate(`/update-bid/${bid._id}`, { state: { bid, item } });
   };
 
+
   const formatDate = (date) => {
     return new Date(date).toLocaleString('en-US', {
       year: 'numeric',
@@ -90,22 +112,22 @@ const ItemDetails = () => {
     });
   };
 
-  // Check if user can review this auction
+  
   const canReview = () => {
     if (!user || !item) return false;
     
-    // Auction must be closed (either status is 'closed' or endDate has passed)
+    
     const isAuctionClosed = item.status === 'closed' || new Date(item.endDate) < new Date();
     if (!isAuctionClosed) return false;
     
-    // User must be a bidder
+
     if (user.role !== 'bidder' && user.role !== 'superadmin') return false;
     
-    // User cannot review their own auction (using toString() for consistent comparison)
-    if (item.createdBy._id.toString() === user.id.toString()) return false;
+
+    if (item.createdBy && user.id && item.createdBy._id.toString() === user.id.toString()) return false;
     
-    // User must have placed a bid on this auction
-    const userHasBid = bids.some(bid => bid.user._id.toString() === user.id.toString());
+
+    const userHasBid = bids.some(bid => bid.user && user.id && bid.user._id.toString() === user.id.toString());
     if (!userHasBid) return false;
     
     return true;
@@ -127,7 +149,7 @@ const ItemDetails = () => {
     );
   }
 
-  const isOwner = user && item.createdBy._id === user.id;
+  const isOwner = user && item.createdBy && item.createdBy._id === user.id;
   const isSuperAdmin = user && user.role === 'superadmin';
   const canEdit = isOwner || isSuperAdmin;
   const canBid = user && (user.role === 'bidder' || user.role === 'superadmin');
@@ -142,23 +164,25 @@ const ItemDetails = () => {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Left: Image and Details */}
           <div>
             <div className="relative overflow-hidden rounded-2xl shadow-2xl mb-8 group">
               <img
-                src={item.image}
-                alt={item.title}
+                src={item.image || 'https://via.placeholder.com/400x300?text=No+Image'}
+                alt={item.title || 'Auction Item'}
                 className="w-full h-96 object-cover transition-transform duration-500 group-hover:scale-110"
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-transparent to-transparent opacity-80"></div>
             </div>
 
             <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
-              <h1 className="text-4xl font-bold text-[#F7F7F7] mb-6 tracking-wide">{item.title}</h1>
+              <h1 className="text-4xl font-bold text-[#F7F7F7] mb-6 tracking-wide">{item.title || 'Untitled Auction'}</h1>
 
               <div className="flex flex-wrap gap-3 mb-6">
                 <span className="px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] rounded-full text-sm font-bold tracking-wider">
-                  {item.category.toUpperCase()}
+                  {(item.category || 'Uncategorized').toUpperCase()}
                 </span>
                 <span
                   className={`px-4 py-2 rounded-full text-sm font-bold tracking-wider ${
@@ -171,32 +195,31 @@ const ItemDetails = () => {
                 </span>
               </div>
 
-              <p className="text-[#E5E4E2] text-lg mb-8 leading-relaxed">{item.description}</p>
+              <p className="text-[#E5E4E2] text-lg mb-8 leading-relaxed">{item.description || 'No description available'}</p>
 
               <div className="border-t border-[#D4AF37]/20 py-6 mb-8 space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-[#E5E4E2] font-medium tracking-wide">STARTING PRICE:</span>
-                  <span className="text-2xl font-bold text-[#F7F7F7]">${item.startingPrice.toLocaleString()}</span>
+                  <span className="text-2xl font-bold text-[#F7F7F7]">${(item.startingPrice || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#E5E4E2] font-medium tracking-wide">CURRENT BID:</span>
                   <span className="text-3xl font-extrabold text-[#D4AF37]">
-                    ${item.currentBid.toLocaleString()}
+                    ${(item.currentBid || item.startingPrice || 0).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#E5E4E2] font-medium tracking-wide">END DATE:</span>
                   <span className="text-lg font-medium text-[#F7F7F7]">
-                    {new Date(item.endDate).toLocaleString()}
+                    {item.endDate ? new Date(item.endDate).toLocaleString() : 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#E5E4E2] font-medium tracking-wide">CREATED BY:</span>
-                  <span className="text-lg font-medium text-[#F7F7F7]">{item.createdBy.name}</span>
+                  <span className="text-lg font-medium text-[#F7F7F7]">{item.createdBy?.name || 'Unknown User'}</span>
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex flex-wrap gap-4">
                 {canBid && isActive && (
                   <Link 
@@ -232,14 +255,13 @@ const ItemDetails = () => {
                 )}
               </div>
               
-              {/* Review Form */}
               {showReviewForm && (
                 <div className="mt-8">
                   <ReviewForm 
                     auctionId={item._id} 
                     onSubmit={() => {
                       setShowReviewForm(false);
-                      loadItemDetails(); // Refresh to hide the form after submission
+                      
                     }} 
                   />
                 </div>
@@ -247,9 +269,7 @@ const ItemDetails = () => {
             </div>
           </div>
 
-          {/* Right: Bids and Leaderboard */}
           <div className="space-y-8">
-            {/* Leaderboard */}
             {bids && bids.length > 0 && (
               <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
                 <div className="flex items-center gap-4 mb-8">
@@ -259,7 +279,7 @@ const ItemDetails = () => {
                 
                 <div className="space-y-4">
                   {bids.slice(0, 5).map((bid, index) => {
-                    const isOwner = user && bid.user._id === user.id;
+                    const isOwner = user && bid.user && user.id && bid.user._id === user.id;
                     
                     return (
                       <div
@@ -274,7 +294,6 @@ const ItemDetails = () => {
                             : 'bg-[#0D0D0D] border border-[#D4AF37]/20'
                         }`}
                       >
-                        {/* Rank */}
                         <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
                           {index === 0 && <span className="text-3xl">🥇</span>}
                           {index === 1 && <span className="text-3xl">🥈</span>}
@@ -288,7 +307,6 @@ const ItemDetails = () => {
                           )}
                         </div>
 
-                        {/* User Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className={`font-bold truncate text-lg ${
@@ -297,7 +315,7 @@ const ItemDetails = () => {
                               index === 2 ? 'text-white' :
                               'text-[#F7F7F7]'
                             }`}>
-                              {bid.user.name}
+                              {bid.user?.name || 'Anonymous User'}
                               {isOwner && <span className="ml-2 px-2 py-1 bg-black/20 rounded-full text-xs font-bold">YOU</span>}
                             </p>
                             {index === 0 && (
@@ -312,11 +330,10 @@ const ItemDetails = () => {
                             index === 2 ? 'text-orange-100' :
                             'text-[#E5E4E2]'
                           }`}>
-                            {formatDate(bid.createdAt)}
+                            {bid.createdAt ? formatDate(bid.createdAt) : 'N/A'}
                           </p>
                         </div>
 
-                        {/* Bid Amount */}
                         <div className="text-right">
                           <p className={`text-2xl font-extrabold ${
                             index === 0 ? 'text-[#0D0D0D]' :
@@ -324,7 +341,7 @@ const ItemDetails = () => {
                             index === 2 ? 'text-white' :
                             'text-[#D4AF37]'
                           }`}>
-                            ${bid.amount.toLocaleString()}
+                            ${(bid.amount || 0).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -340,12 +357,57 @@ const ItemDetails = () => {
               </div>
             )}
 
-            {/* All Bids */}
             <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
               <BidList bids={bids} onUpdate={handleUpdateBid} onDelete={handleDeleteBid} />
             </div>
           </div>
         </div>
+
+        {item.status === 'closed' && (
+          <div className="mt-12 bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
+            <h3 className="text-3xl font-bold text-[#F7F7F7] mb-8 tracking-wide flex items-center gap-3">
+              <span>⭐</span>
+              REVIEWS
+            </h3>
+            {reviewsLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div>
+                <p className="text-xl text-[#E5E4E2]">Loading reviews...</p>
+              </div>
+            ) : reviews.length > 0 ? (
+              <div className="space-y-6">
+                {reviews.map((review) => (
+                  <div key={review._id} className="border-b border-[#D4AF37]/20 pb-6 last:border-0 last:pb-0">
+                    <div className="flex items-start gap-5">
+                      <div className="w-14 h-14 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] rounded-full flex items-center justify-center text-[#0D0D0D] font-bold text-lg">
+                        {review.reviewerId?.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <div className="font-bold text-xl text-[#F7F7F7]">
+                              {review.reviewerId?.name}
+                            </div>
+                            <div className="text-2xl text-[#D4AF37]">{renderStars(review.rating)}</div>
+                          </div>
+                          <div className="text-sm text-[#E5E4E2]/70">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <p className="text-[#E5E4E2] text-lg">{review.feedback}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-[#E5E4E2]/70">
+                <div className="text-5xl mb-4">📝</div>
+                <p className="text-xl">No reviews yet for this auction.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

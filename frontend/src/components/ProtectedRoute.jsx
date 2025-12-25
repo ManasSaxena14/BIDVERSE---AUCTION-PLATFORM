@@ -19,7 +19,7 @@ const ProtectedRoute = ({ children, roles = [] }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Check if user has required role
+  
   if (roles.length > 0 && !roles.includes(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">

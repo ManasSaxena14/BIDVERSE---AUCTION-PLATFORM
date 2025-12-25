@@ -9,7 +9,7 @@ import Footer from './components/Footer';
 import Toast from './components/Toast';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Pages
+
 import Home from './pages/Home';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
@@ -38,7 +38,7 @@ function App() {
                 <div className="min-h-screen bg-[#0D0D0D]">
                   <Navbar />
                   <Routes>
-                  {/* Public Routes */}
+
                   <Route path="/" element={<Home />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/login" element={<Login />} />
@@ -49,7 +49,7 @@ function App() {
                   <Route path="/auction/:id" element={<ViewAuctionDetails />} />
                   <Route path="/category/:categoryName" element={<CategoryItems />} />
 
-                  {/* Protected Routes - Auctioneer & Superadmin */}
+
                   <Route
                     path="/create-item"
                     element={
@@ -67,7 +67,7 @@ function App() {
                     }
                   />
 
-                  {/* Protected Routes - Bidder & Superadmin */}
+
                   <Route
                     path="/profile"
                     element={
@@ -109,7 +109,7 @@ function App() {
                     }
                   />
 
-                  {/* 404 */}
+
                   <Route
                     path="*"
                     element={

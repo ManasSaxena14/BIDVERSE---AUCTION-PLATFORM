@@ -3,29 +3,41 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
-// Load environment variables
+
 dotenv.config();
 
-// Connect to MongoDB Atlas
+
 connectDB();
 
 const app = express();
 
-// Configure CORS for production
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://bidverse-auction-platform.vercel.app' 
-    : 'http://localhost:3000',
+  origin: function (origin, callback) {
+
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://bidverse-auction-platform.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:5173'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
 
-// Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/items', require('./routes/itemRoutes'));
 app.use('/api/bids', require('./routes/bidRoutes'));
@@ -34,7 +46,6 @@ app.use('/api/superadmin', require('./routes/superadminRoutes'));
 app.use('/api/commissions', require('./routes/commissionRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 
-// Root route
 app.get('/', (req, res) => {
   res.json({
     message: '🎉 Auction Platform API',
@@ -63,7 +74,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -72,7 +82,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });

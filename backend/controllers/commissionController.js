@@ -2,9 +2,7 @@ const Commission = require('../models/Commission');
 const AuctionItem = require('../models/AuctionItem');
 const Bid = require('../models/Bid');
 
-// @desc    Create commission for completed auction
-// @route   POST /api/commissions
-// @access  Private (Superadmin only)
+
 const createCommission = async (req, res) => {
   try {
     const { auctionItemId, commissionRate } = req.body;
@@ -18,7 +16,7 @@ const createCommission = async (req, res) => {
       return res.status(400).json({ message: 'Auction must be closed to create commission' });
     }
 
-    // Get winning bid
+
     const winningBid = await Bid.findOne({ item: auctionItemId })
       .sort({ amount: -1 })
       .populate('user', 'name email');
@@ -27,7 +25,7 @@ const createCommission = async (req, res) => {
       return res.status(400).json({ message: 'No bids found for this auction' });
     }
 
-    // Check if commission already exists
+
     const existingCommission = await Commission.findOne({ auctionItem: auctionItemId });
     if (existingCommission) {
       return res.status(400).json({ message: 'Commission already created for this auction' });
@@ -57,9 +55,7 @@ const createCommission = async (req, res) => {
   }
 };
 
-// @desc    Get all commissions
-// @route   GET /api/commissions
-// @access  Private (Superadmin or own commissions)
+
 const getCommissions = async (req, res) => {
   try {
     const { status, seller } = req.query;
@@ -68,7 +64,7 @@ const getCommissions = async (req, res) => {
     if (status) query.status = status;
     if (seller) query.seller = seller;
 
-    // If not superadmin, only show own commissions as seller
+
     if (req.user.role !== 'superadmin') {
       query.seller = req.user._id;
     }
@@ -98,9 +94,7 @@ const getCommissions = async (req, res) => {
   }
 };
 
-// @desc    Get single commission
-// @route   GET /api/commissions/:id
-// @access  Private
+
 const getCommissionById = async (req, res) => {
   try {
     const commission = await Commission.findById(req.params.id)
@@ -112,7 +106,7 @@ const getCommissionById = async (req, res) => {
       return res.status(404).json({ message: 'Commission not found' });
     }
 
-    // Check authorization
+
     if (req.user.role !== 'superadmin' && commission.seller.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to view this commission' });
     }
@@ -127,9 +121,7 @@ const getCommissionById = async (req, res) => {
   }
 };
 
-// @desc    Update commission status
-// @route   PUT /api/commissions/:id
-// @access  Private (Superadmin only)
+
 const updateCommissionStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -163,9 +155,7 @@ const updateCommissionStatus = async (req, res) => {
   }
 };
 
-// @desc    Delete commission
-// @route   DELETE /api/commissions/:id
-// @access  Private (Superadmin only)
+
 const deleteCommission = async (req, res) => {
   try {
     const commission = await Commission.findById(req.params.id);

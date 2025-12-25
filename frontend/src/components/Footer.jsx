@@ -8,7 +8,7 @@ const Footer = () => {
     <footer className="bg-[#0D0D0D] text-[#E5E4E2] border-t border-[#D4AF37]/30">
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          {/* About Section */}
+          
           <div>
             <div className="flex items-center space-x-3 mb-6">
               <img src={logo} alt="BidVerse" className="h-12 w-auto" />
@@ -36,7 +36,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
+          
           <div>
             <h4 className="text-lg font-bold text-[#D4AF37] mb-6 tracking-wider">QUICK LINKS</h4>
             <ul className="space-y-3">
@@ -63,7 +63,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Categories */}
+          
           <div>
             <h4 className="text-lg font-bold text-[#D4AF37] mb-6 tracking-wider">CATEGORIES</h4>
             <ul className="space-y-3">
@@ -77,7 +77,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Support */}
+          
           <div>
             <h4 className="text-lg font-bold text-[#D4AF37] mb-6 tracking-wider">SUPPORT</h4>
             <ul className="space-y-3">
@@ -90,7 +90,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
+        
         <div className="border-t border-[#D4AF37]/20 pt-8 mt-12">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-[#E5E4E2]/60 mb-4 md:mb-0 tracking-wide">

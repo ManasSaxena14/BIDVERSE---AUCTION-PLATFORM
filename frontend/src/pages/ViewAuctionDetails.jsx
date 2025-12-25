@@ -3,59 +3,22 @@ import { useParams, Link } from 'react-router-dom';
 import { useItems } from '../context/ItemContext';
 import { useBids } from '../context/BidContext';
 import { useAuth } from '../context/AuthContext';
+import { useReviews } from '../context/ReviewContext';
 
 const ViewAuctionDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const { items, fetchItems } = useItems();
-  const { bids, fetchBids, createBid } = useBids();
+  const { fetchItemById } = useItems(); // Changed from fetchItems to fetchItemById
+  const { fetchBids, createBid } = useBids();
+  const { getReviewsByAuction } = useReviews();
   const [item, setItem] = useState(null);
   const [itemBids, setItemBids] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
   const [bidAmount, setBidAmount] = useState('');
   const [bidError, setBidError] = useState('');
   const [timeLeft, setTimeLeft] = useState('');
-
-  // Customer Reviews
-  const reviews = [
-    {
-      id: 1,
-      name: 'Sarah Mitchell',
-      rating: 5,
-      avatar: 'https://randomuser.me/api/portraits/women/45.jpg',
-      comment: 'Amazing auction platform! Won my first item and the process was seamless. Highly recommend!',
-      date: '2024-11-15',
-      verified: true
-    },
-    {
-      id: 2,
-      name: 'James Wilson',
-      rating: 5,
-      avatar: 'https://randomuser.me/api/portraits/men/52.jpg',
-      comment: 'Seller was very professional. Item arrived exactly as described. Great experience overall!',
-      date: '2024-11-10',
-      verified: true
-    },
-    {
-      id: 3,
-      name: 'Emma Thompson',
-      rating: 4,
-      avatar: 'https://randomuser.me/api/portraits/women/63.jpg',
-      comment: 'Good platform with fair pricing. Real-time bidding makes it exciting!',
-      date: '2024-11-08',
-      verified: true
-    }
-  ];
-
-  // Trusted Brands
-  const trustedBrands = [
-    { name: 'Rolex', logo: '⌚' },
-    { name: 'Christie\'s', logo: '🎨' },
-    { name: 'Sotheby\'s', logo: '🖼️' },
-    { name: 'Cartier', logo: '💎' },
-    { name: 'Ferrari', logo: '🏎️' },
-    { name: 'Hermès', logo: '👜' }
-  ];
 
   useEffect(() => {
     loadAuctionDetails();
@@ -73,24 +36,34 @@ const ViewAuctionDetails = () => {
   const loadAuctionDetails = async () => {
     try {
       setLoading(true);
-      await Promise.all([fetchItems({ limit: 100 }), fetchBids()]);
+      // Fetch the specific item by ID instead of all items
+      const itemResponse = await fetchItemById(id);
+      await fetchBids();
+      
+      setItem(itemResponse.item);
+      // Set itemBids from the response
+      setItemBids(itemResponse.bids.sort((a, b) => b.amount - a.amount));
     } catch (error) {
       console.error('Failed to load auction details:', error);
     } finally {
       setLoading(false);
+      // Load reviews after item details are loaded
+      loadReviews();
     }
   };
 
-  useEffect(() => {
-    if (items.length > 0) {
-      const foundItem = items.find(i => i._id === id);
-      setItem(foundItem);
+  const loadReviews = async () => {
+    try {
+      setReviewsLoading(true);
+      const reviewsResponse = await getReviewsByAuction(id);
+      setReviews(reviewsResponse.reviews);
+    } catch (error) {
+      console.error('Failed to load reviews:', error);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
     }
-    if (bids.length > 0) {
-      const foundBids = bids.filter(b => b.item?._id === id).sort((a, b) => b.amount - a.amount);
-      setItemBids(foundBids);
-    }
-  }, [items, bids, id]);
+  };
 
   const calculateTimeLeft = () => {
     if (!item?.endDate) return;
@@ -122,7 +95,7 @@ const ViewAuctionDetails = () => {
     }
 
     const amount = parseFloat(bidAmount);
-    if (amount <= item.currentBid) {
+    if (isNaN(amount) || amount <= item.currentBid) {
       setBidError(`Bid must be higher than current bid of $${item.currentBid}`);
       return;
     }
@@ -130,7 +103,7 @@ const ViewAuctionDetails = () => {
     try {
       await createBid({ item: item._id, amount });
       setBidAmount('');
-      loadAuctionDetails();
+      loadAuctionDetails(); // Reload to show new bid
     } catch (error) {
       setBidError(error.response?.data?.message || 'Failed to place bid');
     }
@@ -165,7 +138,6 @@ const ViewAuctionDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Breadcrumb */}
       <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -178,9 +150,7 @@ const ViewAuctionDetails = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Image Gallery */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
               <div className="h-96 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
                 <span className="text-9xl">🖼️</span>
@@ -194,13 +164,12 @@ const ViewAuctionDetails = () => {
               </div>
             </div>
 
-            {/* Item Details */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">{item.title}</h1>
                 <span className={`px-4 py-2 rounded-full text-sm font-bold ${
                   item.status === 'active' ? 'bg-green-100 text-green-700' :
-                  item.status === 'sold' ? 'bg-blue-100 text-blue-700' :
+                  item.status === 'closed' ? 'bg-blue-100 text-blue-700' :
                   'bg-gray-100 text-gray-700'
                 }`}>
                   {item.status?.toUpperCase()}
@@ -227,11 +196,18 @@ const ViewAuctionDetails = () => {
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Starting Price</div>
-                  <div className="font-bold text-gray-900 dark:text-white">${item.startingBid.toLocaleString()}</div>
+                  <div className="font-bold text-gray-900 dark:text-white">${item.startingPrice.toLocaleString()}</div>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Bid</div>
+                  <div className="font-bold text-gray-900 dark:text-white">${item.currentBid.toLocaleString()}</div>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">End Date</div>
+                  <div className="font-bold text-gray-900 dark:text-white">{new Date(item.endDate).toLocaleDateString()}</div>
                 </div>
               </div>
 
-              {/* Seller Info */}
               <div className="border-t dark:border-gray-700 pt-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">About the Seller</h3>
                 <div className="flex items-center gap-4">
@@ -246,39 +222,50 @@ const ViewAuctionDetails = () => {
               </div>
             </div>
 
-            {/* Customer Reviews */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Customer Reviews</h2>
-              <div className="space-y-4">
-                {reviews.map((review) => (
-                  <div key={review.id} className="border-b dark:border-gray-700 pb-4 last:border-0">
-                    <div className="flex items-start gap-4">
-                      <img src={review.avatar} alt={review.name} className="w-12 h-12 rounded-full" />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <div className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                              {review.name}
-                              {review.verified && <span className="text-blue-600 text-sm">✓ Verified Buyer</span>}
-                            </div>
-                            <div className="text-yellow-500">{renderStars(review.rating)}</div>
+            {item.status === 'closed' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Reviews</h2>
+                {reviewsLoading ? (
+                  <div className="text-center py-4">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-4 border-b-4 border-blue-600 mb-2"></div>
+                    <p className="text-gray-600 dark:text-gray-400">Loading reviews...</p>
+                  </div>
+                ) : reviews.length > 0 ? (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <div key={review._id} className="border-b dark:border-gray-700 pb-4 last:border-0">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                            {review.reviewerId?.name?.charAt(0).toUpperCase()}
                           </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {new Date(review.date).toLocaleDateString()}
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <div>
+                                <div className="font-bold text-gray-900 dark:text-white">
+                                  {review.reviewerId?.name}
+                                </div>
+                                <div className="text-yellow-500">{renderStars(review.rating)}</div>
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                                {new Date(review.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <p className="text-gray-700 dark:text-gray-300">{review.feedback}</p>
                           </div>
                         </div>
-                        <p className="text-gray-700 dark:text-gray-300">{review.comment}</p>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="text-center py-4 text-gray-600 dark:text-gray-400">
+                    No reviews yet for this auction.
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Right Column - Bidding Panel */}
           <div className="space-y-6">
-            {/* Bidding Card */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sticky top-4">
               <div className="text-center mb-6">
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Current Bid</div>
@@ -290,7 +277,6 @@ const ViewAuctionDetails = () => {
                 </div>
               </div>
 
-              {/* Countdown Timer */}
               <div className="bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 rounded-lg p-4 mb-6">
                 <div className="text-center">
                   <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -302,7 +288,6 @@ const ViewAuctionDetails = () => {
                 </div>
               </div>
 
-              {/* Place Bid Form */}
               {user && item.status === 'active' && (
                 <form onSubmit={handlePlaceBid} className="space-y-4">
                   <div>
@@ -341,7 +326,6 @@ const ViewAuctionDetails = () => {
               )}
             </div>
 
-            {/* Leaderboard */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 🏆 Top Bidders
@@ -362,7 +346,7 @@ const ViewAuctionDetails = () => {
                     </div>
                     <div className="flex-1">
                       <div className={`font-bold ${index < 3 ? '' : 'text-gray-900 dark:text-white'}`}>
-                        {bid.user?.name}
+                        {bid.user?.name || 'Anonymous'}
                       </div>
                       <div className={`text-sm ${index < 3 ? 'opacity-90' : 'text-gray-600 dark:text-gray-400'}`}>
                         ${bid.amount.toLocaleString()}
@@ -373,13 +357,19 @@ const ViewAuctionDetails = () => {
               </div>
             </div>
 
-            {/* Trusted Brands */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">
                 Trusted by Premium Brands
               </h3>
               <div className="grid grid-cols-3 gap-4">
-                {trustedBrands.map((brand, index) => (
+                {[
+                  { name: 'Rolex', logo: '⌚' },
+                  { name: 'Christie\'s', logo: '🎨' },
+                  { name: 'Sotheby\'s', logo: '🖼️' },
+                  { name: 'Cartier', logo: '💎' },
+                  { name: 'Ferrari', logo: '🏎️' },
+                  { name: 'Hermès', logo: '👜' }
+                ].map((brand, index) => (
                   <div key={index} className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-lg transition-all">
                     <div className="text-3xl mb-1">{brand.logo}</div>
                     <div className="text-xs font-semibold text-gray-700 dark:text-gray-300">{brand.name}</div>

@@ -11,9 +11,9 @@ const { authorize } = require('../middleware/authorization');
 
 const router = express.Router();
 
-// All commission routes are protected
+
 router.post('/', protect, authorize('superadmin'), createCommission);
-router.get('/', protect, getCommissions); // Auctioneers can see their own
+router.get('/', protect, getCommissions);
 router.get('/:id', protect, getCommissionById);
 router.put('/:id', protect, authorize('superadmin'), updateCommissionStatus);
 router.delete('/:id', protect, authorize('superadmin'), deleteCommission);

@@ -84,7 +84,6 @@ const HowItWorks = () => {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
-      {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#1A1A1A] to-black text-[#F7F7F7] py-24 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0" style={{
@@ -107,7 +106,6 @@ const HowItWorks = () => {
         </div>
       </div>
 
-      {/* For Buyers Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-[#F7F7F7] mb-4 tracking-wide">For Buyers</h2>
@@ -136,7 +134,6 @@ const HowItWorks = () => {
         </div>
       </div>
 
-      {/* For Sellers Section */}
       <div className="py-20 bg-gradient-to-b from-[#0D0D0D] to-[#1A1A1A]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -167,7 +164,6 @@ const HowItWorks = () => {
         </div>
       </div>
 
-      {/* Features Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h2 className="text-3xl sm:text-4xl font-bold text-center text-[#F7F7F7] mb-16 tracking-wide">
           Platform Features
@@ -183,7 +179,6 @@ const HowItWorks = () => {
         </div>
       </div>
 
-      {/* FAQ Section */}
       <div className="py-20 bg-gradient-to-b from-[#1A1A1A] to-[#0D0D0D]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-center text-[#F7F7F7] mb-16 tracking-wide">
@@ -207,7 +202,6 @@ const HowItWorks = () => {
         </div>
       </div>
 
-      {/* CTA Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#F7F7F7] mb-6 tracking-wide">
           Ready to Experience <span className="text-[#D4AF37]">Luxury Auctions</span>?

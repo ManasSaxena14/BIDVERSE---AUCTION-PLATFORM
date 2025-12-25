@@ -9,17 +9,17 @@ const Leaderboard = () => {
   const [topBidders, setTopBidders] = useState([]);
   const [topAuctioneers, setTopAuctioneers] = useState([]);
   const [highestBids, setHighestBids] = useState([]);
-  const [activeTab, setActiveTab] = useState('bidders'); // bidders, auctioneers, bids
+  const [activeTab, setActiveTab] = useState('bidders');
 
   useEffect(() => {
     loadLeaderboardData();
     
-    // Refresh data every 30 seconds to ensure leaderboard stays current
+
     const interval = setInterval(() => {
       loadLeaderboardData();
     }, 30000);
     
-    // Refresh data when component comes back into focus
+
     const handleFocus = () => {
       loadLeaderboardData();
     };
@@ -54,7 +54,7 @@ const Leaderboard = () => {
   };
 
   const calculateLeaderboards = () => {
-    // Top Bidders (by total bid amount)
+
     const bidderStats = {};
     bids.forEach(bid => {
       const userId = bid.user._id;
@@ -73,13 +73,12 @@ const Leaderboard = () => {
 
     const topBiddersArray = Object.values(bidderStats)
       .sort((a, b) => {
-        // Ensure proper numeric comparison
         return b.totalAmount - a.totalAmount;
       })
       .slice(0, 10);
     setTopBidders(topBiddersArray);
 
-    // Top Auctioneers (by items created)
+
     const auctioneerStats = {};
     items.forEach(item => {
       const userId = item.createdBy._id;
@@ -101,16 +100,14 @@ const Leaderboard = () => {
 
     const topAuctioneersArray = Object.values(auctioneerStats)
       .sort((a, b) => {
-        // Ensure proper numeric comparison
         return b.totalRevenue - a.totalRevenue;
       })
       .slice(0, 10);
     setTopAuctioneers(topAuctioneersArray);
 
-    // Highest Bids
+
     const sortedBids = [...bids]
       .sort((a, b) => {
-        // Ensure proper numeric comparison
         return b.amount - a.amount;
       })
       .slice(0, 10);
@@ -144,7 +141,6 @@ const Leaderboard = () => {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
-      {/* Luxury Hero Section */}
       <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#1A1A1A] to-black overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -172,7 +168,6 @@ const Leaderboard = () => {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-center">
           <div className="inline-flex bg-[#1A1A1A] rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.6)] p-2 gap-2 border border-[#D4AF37]/30">
@@ -210,9 +205,7 @@ const Leaderboard = () => {
         </div>
       </div>
 
-      {/* Leaderboard Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        {/* Top Bidders */}
         {activeTab === 'bidders' && (
           <div>
             <h2 className="text-3xl font-bold text-[#F7F7F7] mb-8 tracking-wide">TOP BIDDERS</h2>
@@ -248,7 +241,6 @@ const Leaderboard = () => {
           </div>
         )}
 
-        {/* Top Auctioneers */}
         {activeTab === 'auctioneers' && (
           <div>
             <h2 className="text-3xl font-bold text-[#F7F7F7] mb-8 tracking-wide">TOP SELLERS</h2>
@@ -288,7 +280,6 @@ const Leaderboard = () => {
           </div>
         )}
 
-        {/* Highest Bids */}
         {activeTab === 'bids' && (
           <div>
             <h2 className="text-3xl font-bold text-[#F7F7F7] mb-8 tracking-wide">HIGHEST BIDS</h2>
@@ -324,7 +315,6 @@ const Leaderboard = () => {
           </div>
         )}
 
-        {/* Empty State */}
         {((activeTab === 'bidders' && topBidders.length === 0) ||
           (activeTab === 'auctioneers' && topAuctioneers.length === 0) ||
           (activeTab === 'bids' && highestBids.length === 0)) && (

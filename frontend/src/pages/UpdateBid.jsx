@@ -43,7 +43,7 @@ const UpdateBid = () => {
     try {
       await updateBid(id, { amount: parseFloat(amount) });
       
-      // Refresh item data to update current bid and leaderboard
+
       try {
         await fetchItems();
       } catch (refreshErr) {
@@ -72,7 +72,6 @@ const UpdateBid = () => {
         </div>
 
         <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
-          {/* Item Summary */}
           <div className="bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A] border border-[#D4AF37]/20 rounded-xl p-6 mb-8 shadow-lg">
             <div className="flex gap-4">
               <img

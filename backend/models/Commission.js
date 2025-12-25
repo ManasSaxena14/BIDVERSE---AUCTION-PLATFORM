@@ -21,7 +21,7 @@ const commissionSchema = new mongoose.Schema({
   },
   commissionRate: {
     type: Number,
-    default: 10, // 10% commission
+    default: 10,
     min: 0,
     max: 100
   },
@@ -47,7 +47,7 @@ const commissionSchema = new mongoose.Schema({
   }
 });
 
-// Calculate commission before saving
+
 commissionSchema.pre('save', function(next) {
   if (this.isNew) {
     this.commissionAmount = (this.finalBidAmount * this.commissionRate) / 100;

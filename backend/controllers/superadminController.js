@@ -2,9 +2,7 @@ const User = require('../models/User');
 const AuctionItem = require('../models/AuctionItem');
 const Bid = require('../models/Bid');
 
-// @desc    Get platform statistics
-// @route   GET /api/superadmin/stats
-// @access  Private (Superadmin only)
+
 const getPlatformStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
@@ -18,7 +16,7 @@ const getPlatformStats = async (req, res) => {
     
     const totalBids = await Bid.countDocuments();
     
-    // Calculate total bid value
+
     const bidStats = await Bid.aggregate([
       {
         $group: {
@@ -60,26 +58,24 @@ const getPlatformStats = async (req, res) => {
   }
 };
 
-// @desc    Get recent activities
-// @route   GET /api/superadmin/activities
-// @access  Private (Superadmin only)
+
 const getRecentActivities = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
 
-    // Get recent users
+
     const recentUsers = await User.find()
       .select('-password')
       .sort({ createdAt: -1 })
       .limit(5);
 
-    // Get recent items
+
     const recentItems = await AuctionItem.find()
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 })
       .limit(10);
 
-    // Get recent bids
+
     const recentBids = await Bid.find()
       .populate('user', 'name email')
       .populate('item', 'title')
@@ -100,9 +96,7 @@ const getRecentActivities = async (req, res) => {
   }
 };
 
-// @desc    Delete any auction item (admin override)
-// @route   DELETE /api/superadmin/items/:id
-// @access  Private (Superadmin only)
+
 const forceDeleteItem = async (req, res) => {
   try {
     const item = await AuctionItem.findById(req.params.id);
@@ -111,7 +105,7 @@ const forceDeleteItem = async (req, res) => {
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    // Delete all bids associated
+
     const Bid = require('../models/Bid');
     await Bid.deleteMany({ item: req.params.id });
 
@@ -127,9 +121,7 @@ const forceDeleteItem = async (req, res) => {
   }
 };
 
-// @desc    Delete any bid (admin override)
-// @route   DELETE /api/superadmin/bids/:id
-// @access  Private (Superadmin only)
+
 const forceDeleteBid = async (req, res) => {
   try {
     const bid = await Bid.findById(req.params.id);
@@ -140,7 +132,7 @@ const forceDeleteBid = async (req, res) => {
 
     await Bid.findByIdAndDelete(req.params.id);
 
-    // Recalculate currentBid
+
     const highestBid = await Bid.findOne({ item: bid.item }).sort({ amount: -1 });
     const auctionItem = await AuctionItem.findById(bid.item);
     

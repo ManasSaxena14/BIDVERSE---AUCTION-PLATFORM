@@ -50,13 +50,12 @@ const auctionItemSchema = new mongoose.Schema({
   }
 });
 
-// Better approach: Use a virtual field to determine if an item is expired
-// This avoids interfering with queries and updates
+
 auctionItemSchema.virtual('isExpired').get(function() {
   return this.endDate < new Date();
 });
 
-// Method to manually update status for expired items
+
 auctionItemSchema.statics.updateExpiredItems = async function() {
   const now = new Date();
   const result = await this.updateMany(
@@ -66,30 +65,30 @@ auctionItemSchema.statics.updateExpiredItems = async function() {
   return result;
 };
 
-// Method to get items with updated status
+
 auctionItemSchema.statics.findWithUpdatedStatus = async function(query = {}, projection = null, options = {}) {
-  // First update any expired items
+
   await this.updateExpiredItems();
   
-  // Then execute the query
+
   return this.find(query, projection, options);
 };
 
-// Method to update currentBid based on highest bid
+
 auctionItemSchema.statics.updateCurrentBid = async function(itemId) {
   const Bid = require('./Bid');
   const item = await this.findById(itemId);
   
   if (!item) return;
   
-  // Find the highest bid for this item
+
   const highestBid = await Bid.findOne({ item: itemId }).sort({ amount: -1 });
   
   if (highestBid) {
-    // Update currentBid to the highest bid amount
+
     item.currentBid = highestBid.amount;
   } else {
-    // If no bids, set currentBid to startingPrice
+
     item.currentBid = item.startingPrice;
   }
   

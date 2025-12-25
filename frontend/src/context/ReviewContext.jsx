@@ -30,6 +30,20 @@ export const ReviewProvider = ({ children }) => {
     }
   };
 
+  const getReviewsByAuction = async (auctionId) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await reviewService.getReviewsByAuction(auctionId);
+      return response;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch reviews');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const deleteReview = async (id) => {
     try {
       setLoading(true);
@@ -50,6 +64,7 @@ export const ReviewProvider = ({ children }) => {
     loading,
     error,
     createReview,
+    getReviewsByAuction,
     deleteReview
   };
 

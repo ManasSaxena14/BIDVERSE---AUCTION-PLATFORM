@@ -22,9 +22,12 @@ const ItemCard = ({ item, onDelete }) => {
     <div className="bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] border border-[#D4AF37]/20 rounded-2xl shadow-2xl overflow-hidden hover:shadow-[0_20px_40px_rgba(212,175,55,0.3)] transition-all duration-300 group transform hover:-translate-y-2 hover:scale-[1.02]">
       <Link to={`/items/${item._id}`} className="block relative overflow-hidden">
         <img
-          src={item.image}
+          src={item.image || 'https://via.placeholder.com/400x300?text=No+Image'}
           alt={item.title}
           className="w-full h-56 object-cover transform group-hover:scale-110 transition-transform duration-500"
+          onError={(e) => {
+            e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+          }}
         />
         <div className="absolute top-4 right-4">
           <span className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider backdrop-blur-md ${

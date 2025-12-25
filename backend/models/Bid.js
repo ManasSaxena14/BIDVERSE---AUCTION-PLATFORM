@@ -22,7 +22,7 @@ const bidSchema = new mongoose.Schema({
   }
 });
 
-// Ensure bid amount is greater than current bid
+
 bidSchema.pre('save', async function(next) {
   const AuctionItem = mongoose.model('AuctionItem');
   const item = await AuctionItem.findById(this.item);
@@ -38,10 +38,10 @@ bidSchema.pre('save', async function(next) {
   next();
 });
 
-// Update auction item currentBid after saving bid
+
 bidSchema.post('save', async function() {
   const AuctionItem = mongoose.model('AuctionItem');
-  // Use the utility function to update currentBid
+
   await AuctionItem.updateCurrentBid(this.item);
 });
 

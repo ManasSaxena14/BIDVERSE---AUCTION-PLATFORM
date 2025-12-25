@@ -21,7 +21,7 @@ const UserProfile = () => {
     itemsSold: 0,
     totalRevenue: 0
   });
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,14 +49,14 @@ const UserProfile = () => {
 
   const calculateStats = () => {
     try {
-      // Get user ID (handle both id and _id formats)
+
       const userId = user.id || user._id;
-      
-      // Filter user's items
+
+
       const userItems = items.filter(item => item.createdBy?._id === userId);
       setMyItems(userItems);
 
-      // Filter user's bids
+
       const userBids = bids.filter(bid => bid.user?._id === userId);
       setMyBids(userBids);
 
@@ -96,6 +96,14 @@ const UserProfile = () => {
     }
   };
 
+  const isAuctionActive = (item) => {
+    if (!item) return false;
+    // Check if auction status is active and end date hasn't passed
+    const isStatusActive = item.status === 'active';
+    const isEndDateFuture = new Date(item.endDate) > new Date();
+    return isStatusActive && isEndDateFuture;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
@@ -109,19 +117,17 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
-      {/* Profile Header */}
       <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#1A1A1A] to-black text-[#F7F7F7] py-16 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(212,175,55,0.15) 1px, transparent 0)` ,
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(212,175,55,0.15) 1px, transparent 0)`,
             backgroundSize: '40px 40px'
           }}></div>
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D0D0D]"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-8">
-            {/* Avatar */}
             <div className="relative">
               <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center text-5xl shadow-2xl border-4 border-[#D4AF37] text-[#0D0D0D] font-bold">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
@@ -129,7 +135,6 @@ const UserProfile = () => {
               <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-green-500 to-emerald-400 w-8 h-8 rounded-full border-4 border-[#0D0D0D]"></div>
             </div>
 
-            {/* User Info */}
             <div className="flex-1 text-center lg:text-left">
               <h1 className="text-4xl sm:text-5xl font-extrabold mb-3 tracking-wide">{user?.name}</h1>
               <p className="text-xl text-[#E5E4E2] mb-4">{user?.email}</p>
@@ -146,7 +151,6 @@ const UserProfile = () => {
               </div>
             </div>
 
-            {/* Edit Profile Button */}
             <div className="mt-6 lg:mt-0">
               <Link
                 to="/edit-profile"
@@ -162,7 +166,6 @@ const UserProfile = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
           <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-6 hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all group">
@@ -188,57 +191,50 @@ const UserProfile = () => {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-3 inline-flex gap-2 flex-wrap">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-6 py-3 rounded-xl font-bold transition-all tracking-wider ${
-              activeTab === 'overview'
+            className={`px-6 py-3 rounded-xl font-bold transition-all tracking-wider ${activeTab === 'overview'
                 ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] shadow-lg'
                 : 'text-[#E5E4E2] hover:bg-white/10'
-            }`}
+              }`}
           >
             OVERVIEW
           </button>
           <button
             onClick={() => setActiveTab('myBids')}
-            className={`px-6 py-3 rounded-xl font-bold transition-all tracking-wider ${
-              activeTab === 'myBids'
+            className={`px-6 py-3 rounded-xl font-bold transition-all tracking-wider ${activeTab === 'myBids'
                 ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] shadow-lg'
                 : 'text-[#E5E4E2] hover:bg-white/10'
-            }`}
+              }`}
           >
             MY BIDS
           </button>
           {(user?.role === 'auctioneer' || user?.role === 'superadmin') && (
             <button
               onClick={() => setActiveTab('myAuctions')}
-              className={`px-6 py-3 rounded-xl font-bold transition-all tracking-wider ${
-                activeTab === 'myAuctions'
+              className={`px-6 py-3 rounded-xl font-bold transition-all tracking-wider ${activeTab === 'myAuctions'
                   ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] shadow-lg'
                   : 'text-[#E5E4E2] hover:bg-white/10'
-              }`}
+                }`}
             >
               MY AUCTIONS
             </button>
           )}
           <button
             onClick={() => setActiveTab('activity')}
-            className={`px-6 py-3 rounded-xl font-bold transition-all tracking-wider ${
-              activeTab === 'activity'
+            className={`px-6 py-3 rounded-xl font-bold transition-all tracking-wider ${activeTab === 'activity'
                 ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] shadow-lg'
                 : 'text-[#E5E4E2] hover:bg-white/10'
-            }`}
+              }`}
           >
             ACTIVITY
           </button>
         </div>
       </div>
 
-      {/* Tab Content */}
       <div className="max-w-7xl mx-auto px-4 pb-12">
-        {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
@@ -285,7 +281,6 @@ const UserProfile = () => {
           </div>
         )}
 
-        {/* My Bids Tab */}
         {activeTab === 'myBids' && (
           <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
             <h2 className="text-3xl font-bold text-[#F7F7F7] mb-8 tracking-wide">MY BIDS</h2>
@@ -314,12 +309,14 @@ const UserProfile = () => {
                         >
                           VIEW ITEM
                         </Link>
-                        <Link
-                          to={`/bids/${bid._id}/update`}
-                          className="px-5 py-2 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] rounded-lg font-bold hover:from-[#B8860B] hover:to-[#D4AF37] transition-all shadow-lg hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] tracking-wider"
-                        >
-                          UPDATE BID
-                        </Link>
+                        {isAuctionActive(bid.item) && (
+                          <Link
+                            to={`/bids/${bid._id}/update`}
+                            className="px-5 py-2 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] rounded-lg font-bold hover:from-[#B8860B] hover:to-[#D4AF37] transition-all shadow-lg hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] tracking-wider"
+                          >
+                            UPDATE BID
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -338,7 +335,6 @@ const UserProfile = () => {
           </div>
         )}
 
-        {/* My Auctions Tab */}
         {activeTab === 'myAuctions' && (user?.role === 'auctioneer' || user?.role === 'superadmin') && (
           <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
             <h2 className="text-3xl font-bold text-[#F7F7F7] mb-8 tracking-wide">MY AUCTIONS</h2>
@@ -347,7 +343,7 @@ const UserProfile = () => {
                 {myItems.map((item) => (
                   <div key={item._id} className="bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A] border border-[#D4AF37]/20 rounded-2xl overflow-hidden hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all duration-300 group">
                     <div className="h-48 bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] flex items-center justify-center text-6xl text-[#D4AF37] border-b border-[#D4AF37]/20">
-                      
+
                     </div>
                     <div className="p-6">
                       <h3 className="font-bold text-xl text-[#F7F7F7] mb-3 tracking-wide">{item.title}</h3>
@@ -356,11 +352,10 @@ const UserProfile = () => {
                         <span className="text-[#E5E4E2]/70 font-medium">CURRENT BID:</span>
                         <span className="font-extrabold text-[#D4AF37] text-xl">${item.currentBid.toLocaleString()}</span>
                       </div>
-                      <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold tracking-wider ${
-                        item.status === 'active' ? 'bg-gradient-to-r from-green-600 to-emerald-500 text-white' :
-                        item.status === 'sold' ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white' :
-                        'bg-gradient-to-r from-gray-600 to-gray-500 text-white'
-                      }`}>
+                      <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold tracking-wider ${item.status === 'active' ? 'bg-gradient-to-r from-green-600 to-emerald-500 text-white' :
+                          item.status === 'sold' ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white' :
+                            'bg-gradient-to-r from-gray-600 to-gray-500 text-white'
+                        }`}>
                         {item.status?.toUpperCase()}
                       </span>
                     </div>
@@ -380,7 +375,6 @@ const UserProfile = () => {
           </div>
         )}
 
-        {/* Activity Tab */}
         {activeTab === 'activity' && (
           <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
             <h2 className="text-3xl font-bold text-[#F7F7F7] mb-8 tracking-wide">RECENT ACTIVITY</h2>
@@ -388,7 +382,7 @@ const UserProfile = () => {
               {[...myBids].slice(0, 10).map((bid, index) => (
                 <div key={index} className="flex items-center gap-5 p-5 bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A] border border-[#D4AF37]/20 rounded-xl hover:shadow-[0_0_15px_rgba(212,175,55,0.1)] transition-all duration-300">
                   <div className="w-14 h-14 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] rounded-full flex items-center justify-center text-[#0D0D0D] font-bold text-xl">
-                    
+
                   </div>
                   <div className="flex-1">
                     <p className="font-bold text-[#F7F7F7] text-lg mb-1">

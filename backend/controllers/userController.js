@@ -1,8 +1,6 @@
 const User = require('../models/User');
 
-// @desc    Get all users
-// @route   GET /api/users
-// @access  Private (Superadmin only)
+
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
@@ -18,9 +16,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// @desc    Get single user by ID
-// @route   GET /api/users/:id
-// @access  Private (Superadmin only)
+
 const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
@@ -39,9 +35,7 @@ const getUserById = async (req, res) => {
   }
 };
 
-// @desc    Update user
-// @route   PUT /api/users/:id
-// @access  Private (Superadmin only)
+
 const updateUser = async (req, res) => {
   try {
     const { name, email, role } = req.body;
@@ -52,7 +46,7 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Update fields
+
     if (name) user.name = name;
     if (email) user.email = email;
     if (role) user.role = role;
@@ -72,9 +66,7 @@ const updateUser = async (req, res) => {
   }
 };
 
-// @desc    Delete user
-// @route   DELETE /api/users/:id
-// @access  Private (Superadmin only)
+
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -83,7 +75,7 @@ const deleteUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Delete user's auction items and bids
+
     const AuctionItem = require('../models/AuctionItem');
     const Bid = require('../models/Bid');
     

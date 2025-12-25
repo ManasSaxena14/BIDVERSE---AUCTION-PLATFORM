@@ -22,7 +22,7 @@ const CategoryItems = () => {
   };
 
   useEffect(() => {
-    // Since we're filtering on the backend, we can use all items directly
+    
     setCategoryItems(items);
   }, [items]);
 
@@ -43,7 +43,6 @@ const CategoryItems = () => {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
-      {/* Category Header */}
       <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#1A1A1A] to-black text-[#F7F7F7] py-20 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0" style={{
@@ -72,7 +71,6 @@ const CategoryItems = () => {
         </div>
       </div>
 
-      {/* Items Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {categoryItems.length > 0 ? (
           <>
