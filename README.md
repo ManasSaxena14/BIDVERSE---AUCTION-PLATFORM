@@ -1,219 +1,127 @@
-# BIDVERSE - AUCTION PLATFORM
+<h1 align="center"><b>BIDVERSE — Complete MERN Auction Platform</b></h1>
 
-A complete auction platform built with the MERN stack (MongoDB, Express.js, React, Node.js) featuring JWT authentication, role-based access control (RBAC), real-time bidding, and a review system.
+<p align="center">
+  A high-performance, full-stack auction platform designed for seamless bidding experiences. Built with the <b>MERN</b> stack, BIDVERSE offers robust security, real-time updates, and a modular architecture.
+</p>
 
-## Deployment Notes
+---
 
-### Backend Deployment (Render)
-- Build Command: `yarn install --production`
-- Start Command: `yarn start`
-- Environment Variables Required:
-  - `MONGO_URI` - MongoDB Atlas connection string
-  - `JWT_SECRET` - Secret key for JWT token generation
-  - `PORT` - Port for the server (Render will set this automatically)
-  - `NODE_ENV` - Set to "production"
+## Live Demo & API
+- **Frontend Demo:** [bidverse-auction-platform.vercel.app](https://bidverse-auction-platform.vercel.app/)
+- **Backend API:** [bidverse-auction-platform.onrender.com/api](https://bidverse-auction-platform.onrender.com/api)
 
-**IMPORTANT**: The backend is now deployed at `https://bidverse-auction-platform.onrender.com` and configured in `frontend/vite.config.js`
+---
 
-### Frontend Deployment (Vercel)
-- The frontend is configured to work with both local development and production environments
-- For production, it expects the backend to be deployed and the URL updated in `vite.config.js`
-- The CORS configuration in the backend is set to allow requests from `https://bidverse-auction-platform.vercel.app`
+## Key Features
+- **Advanced Authentication**: Secure JWT-based authentication with bcrypt password hashing.
+- **Role-Based Access Control (RBAC)**: Distinct permissions for Bidder, Seller, and Admin.
+- **Real-Time Bidding**: Dynamic auction updates for competitive bidding.
+- **Item Management**: Sellers can create, update, and manage auction items with ease.
+- **Review System**: Built-in trust mechanism with user reviews and ratings.
+- **Responsive Design**: Fluid UI built with Tailwind CSS for mobile and desktop.
 
-### API Configuration
-- In development: Frontend makes requests to `/api` which are proxied to `http://localhost:6001`
-- In production: Frontend makes direct requests to `https://bidverse-auction-platform.onrender.com/api`
+---
 
-## Local Development Setup
+## Tech Stack
+
+### Frontend
+- **React.js (Vite)** — Fast, component-based UI
+- **Tailwind CSS** — Modern utility-first styling
+- **Context API** — Lightweight state management
+- **React Icons** — Consistent iconography
+- **Axios** — Robust HTTP communication
+
+### Backend
+- **Node.js & Express** — Scalable server-side logic
+- **MongoDB Atlas** — Scalable cloud database
+- **Mongoose** — Elegant object modeling for Node.js
+- **JWT** — Secure stateless authentication
+- **Express Validator** — Strict request data validation
+
+---
+
+## Getting Started
 
 ### Prerequisites
-- Node.js (v16 or higher)
+- Node.js (v16+)
 - npm or yarn
 - MongoDB Atlas account
 
-### Backend Setup
+### 1. Clone the repository
+```bash
+git clone https://github.com/ManasSaxena14/BIDVERSE---AUCTION-PLATFORM.git
+cd BIDVERSE---AUCTION-PLATFORM
+```
 
-See [backend/README.md](backend/README.md) for detailed backend setup instructions.
-
-#### Quick Backend Setup:
+### 2. Backend Setup
 ```bash
 cd backend
 npm install
-cp .env.example .env
+cp .env.example .env # Update variables: MONGO_URI, JWT_SECRET, PORT
 npm run dev
 ```
+*Server runs on:* `http://localhost:6001`
 
-Backend will run on: **http://localhost:6001**
-
-### Frontend Setup
-
-See [frontend/README.md](frontend/README.md) for detailed frontend setup instructions.
-
-#### Quick Frontend Setup:
+### 3. Frontend Setup
 ```bash
-cd frontend
+cd ../frontend
 npm install
 npm run dev
 ```
-
-Frontend will run on: **http://localhost:3000**
+*App runs on:* `http://localhost:3000`
 
 ---
 
-## 👤 Creating a Superadmin User
+## User Roles
+- **Bidder**: Browse items, place bids, and leave reviews.
+- **Seller**: Post new items, manage their auctions, and view bids.
+- **Admin**: Full system control — manage users, items, and platform settings.
 
-Since superadmin cannot be created via the signup API, you must manually insert it into MongoDB Atlas:
+> [!IMPORTANT]
+> **Admin Setup**: Since admins cannot be created via the signup API for security, you must manually insert the first admin into your database. See [Creating an Admin](#creating-an-admin-user) section below.
 
-### Option 1: Using MongoDB Compass (Recommended for Beginners)
+---
 
-1. Download and install [MongoDB Compass](https://www.mongodb.com/products/compass)
-2. Connect using your MongoDB Atlas connection string
-3. Navigate to your database → `users` collection
-4. Click "Add Data" → "Insert Document"
-5. Paste this JSON (make sure to hash the password first or use a simple one for testing):
+## Creating an Admin User
+To get started with admin privileges, insert a document into your `users` collection:
 
 ```json
 {
-  "name": "Super Admin",
-  "email": "admin@auction.com",
-  "password": "$2a$10$rG4.YLL/Rnay9F3UtDa0OuJR3fWRbDhF9L3XX.QCZDCdzRFX.GkZu", 
-  "role": "superadmin"
+  "name": "Admin Name",
+  "email": "admin@bidverse.com",
+  "password": "[HASHED_PASSWORD]", 
+  "role": "admin"
 }
 ```
-
-### Option 2: Using MongoDB Atlas Dashboard
-
-1. Go to your MongoDB Atlas dashboard
-2. Select your cluster
-3. Click "Collections"
-4. Find your database and `users` collection
-5. Click "Insert Document"
-6. Paste the same JSON as above
-
-### Option 3: Using a Script
-
-Create a script to insert the superadmin user:
-
-```javascript
-const mongoose = require('mongoose');
-
-mongoose.connect('your-mongodb-uri');
-
-const User = require('./backend/models/User');
-
-const createSuperAdmin = async () => {
-  try {
-    const superAdmin = new User({
-      name: 'Super Admin',
-      email: 'admin@auction.com',
-      password: 'admin123', 
-      role: 'superadmin'
-    });
-
-    await superAdmin.save();
-    console.log('Super admin created successfully!');
-    process.exit(0);
-  } catch (error) {
-    console.error('Error creating super admin:', error);
-    process.exit(1);
-  }
-};
-
-createSuperAdmin();
-```
-
-Run with: `node create-superadmin.js`
+*You can use a script or MongoDB Compass for this operation.*
 
 ---
 
-## 🧪 Testing API Endpoints
-
-### User Signup
-```bash
-curl -X POST http://localhost:6001/api/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "John Doe",
-    "email": "john@example.com",
-    "password": "password123",
-    "role": "bidder"
-  }'
-```
-
-### User Login
-```bash
-curl -X POST http://localhost:6001/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "password": "password123"
-  }'
-```
-
-### Create Auction Item
-```bash
-curl -X POST http://localhost:6001/api/items \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "title": "Vintage Watch",
-    "description": "Beautiful vintage watch from 1950s",
-    "startingPrice": 100,
-    "category": "Jewelry",
-    "endDate": "2024-12-31T23:59:59.000Z"
-  }'
-```
+## API Documentation (Quick View)
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/auth/signup` | Register new user | Public |
+| POST | `/api/auth/login` | Obtain JWT token | Public |
+| GET | `/api/items` | List all auction items | Public |
+| POST | `/api/items` | Create new auction item | Private (Seller) |
+| POST | `/api/bids/:itemId` | Place a bid | Private (Bidder) |
 
 ---
 
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **MongoDB Connection Error**
-   - Check your `MONGO_URI` in backend `.env`
-   - Ensure your IP is whitelisted in MongoDB Atlas
-   - Verify username/password credentials
-
-2. **JWT Token Expired**
-   - Log in again to get a new token
-   - Check token expiration settings
-
-3. **Permission Denied**
-   - Verify your user role
-   - Check if you're the owner of the resource
-
-4. **Frontend Not Connecting to Backend**
-   - Ensure backend is running on `http://localhost:6001`
-   - Check Vite proxy configuration in `frontend/vite.config.js`
-   - Verify CORS settings in backend
+## Contributing
+Contributions are welcome! Please follow these steps:
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
-## 📚 Documentation
-
-For detailed documentation, please refer to:
-- [Backend Documentation](backend/README.md)
-- [Frontend Documentation](frontend/README.md)
+## License
+Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a pull request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 📞 Support
-
-For support, email [your-email@example.com] or open an issue in the repository.
+## Support
+Created by Manas Saxena. For support, reach out via [GitHub Issues](https://github.com/ManasSaxena14/BIDVERSE---AUCTION-PLATFORM/issues).
