@@ -8,8 +8,6 @@
 
 ## Live Demo & API
 - **Frontend Demo:** [bidverse-auction-platform.vercel.app](https://bidverse-auction-platform.vercel.app/)
-- **Backend API:** [bidverse-auction-platform.onrender.com/api](https://bidverse-auction-platform.onrender.com/api)
-
 ---
 
 ## Key Features
@@ -93,7 +91,6 @@ To get started with admin privileges, insert a document into your `users` collec
   "role": "admin"
 }
 ```
-*You can use a script or MongoDB Compass for this operation.*
 
 ---
 
@@ -117,11 +114,3 @@ Contributions are welcome! Please follow these steps:
 5. Open a Pull Request
 
 ---
-
-## License
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-## Support
-Created by Manas Saxena. For support, reach out via [GitHub Issues](https://github.com/ManasSaxena14/BIDVERSE---AUCTION-PLATFORM/issues).
