@@ -1,4 +1,19 @@
 import { useState, useEffect } from 'react';
+import { 
+  HiOutlineInbox, 
+  HiOutlineCheckCircle, 
+  HiOutlineCurrencyDollar, 
+  HiOutlineClock, 
+  HiOutlineFolder, 
+  HiOutlineCalendarDays, 
+  HiOutlinePencilSquare, 
+  HiOutlineTrash, 
+  HiOutlinePlus,
+  HiOutlineChartBar,
+  HiOutlineArrowUpRight,
+  HiOutlineScale,
+  HiOutlineArrowRight
+} from 'react-icons/hi2';
 import { useAuth } from '../context/AuthContext';
 import { useItems } from '../context/ItemContext';
 import { Link } from 'react-router-dom';
@@ -14,7 +29,6 @@ const ViewMyAuctions = () => {
   const [sortBy, setSortBy] = useState('latest');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 12;
 
   useEffect(() => {
@@ -32,9 +46,8 @@ const ViewMyAuctions = () => {
       };
       const response = await fetchItems(params);
       setTotalPages(response.pages || 1);
-      setTotalItems(response.total || 0);
     } catch (error) {
-      console.error('Failed to load auctions:', error);
+      addToast('Synchronization of portfolio records failed.', 'error');
     } finally {
       setLoading(false);
     }
@@ -48,72 +61,39 @@ const ViewMyAuctions = () => {
 
   const filterAndSortAuctions = () => {
     if (!user) return;
-    
     let filtered = [...items];
-
-    // Apply filter
-    if (filter !== 'all') {
-      filtered = filtered.filter(item => item.status === filter);
-    }
-
-    // Apply sorting
+    if (filter !== 'all') filtered = filtered.filter(item => item.status === filter);
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'latest':
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        case 'oldest':
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        case 'price_high':
-          return b.currentBid - a.currentBid;
-        case 'price_low':
-          return a.currentBid - b.currentBid;
-        case 'ending_soon':
-          return new Date(a.endDate) - new Date(b.endDate);
-        default:
-          return 0;
+        case 'latest': return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'oldest': return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'price_high': return b.currentBid - a.currentBid;
+        case 'price_low': return a.currentBid - b.currentBid;
+        case 'ending_soon': return new Date(a.endDate) - new Date(b.endDate);
+        default: return 0;
       }
     });
-
     setMyAuctions(filtered);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this auction?')) {
+    if (window.confirm('Confirm permanent asset decommissioning?')) {
       try {
         await deleteItem(id);
-        addToast('Auction deleted successfully!', 'success');
+        addToast('Asset decommissioned.', 'success');
         loadMyAuctions();
       } catch (error) {
-        addToast('Failed to delete auction', 'error');
+        addToast('Decommissioning failed.', 'error');
       }
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-gradient-to-r from-green-600 to-emerald-500 text-white';
-      case 'sold':
-        return 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white';
-      case 'closed':
-        return 'bg-gradient-to-r from-gray-600 to-gray-800 text-white';
-      default:
-        return 'bg-gradient-to-r from-gray-600 to-gray-800 text-white';
-    }
-  };
-
   const calculateTimeLeft = (endDate) => {
-    const now = new Date().getTime();
-    const end = new Date(endDate).getTime();
-    const distance = end - now;
-
-    if (distance < 0) return 'Ended';
-
+    const distance = new Date(endDate).getTime() - new Date().getTime();
+    if (distance < 0) return 'PROTOCOL TERMINATED';
     const days = Math.floor(distance / (1000 * 60 * 60 * 24));
     const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
-    if (days > 0) return `${days}d ${hours}h left`;
-    return `${hours}h left`;
+    return days > 0 ? `${days}D ${hours}H REMAINING` : `${hours}H REMAINING`;
   };
 
   const stats = {
@@ -124,244 +104,181 @@ const ViewMyAuctions = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#D4AF37] mb-4"></div>
-          <p className="text-xl text-[#E5E4E2]">Loading your auctions...</p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0D0D0D] space-y-10">
+        <div className="w-12 h-12 border-t-2 border-[#D4AF37] rounded-full animate-spin shadow-[0_0_30px_rgba(212,175,55,0.2)]"></div>
+        <div className="text-[10px] text-[#D4AF37] font-black tracking-[0.6em] uppercase animate-pulse italic">Synchronizing...</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
-      <div className="bg-gradient-to-r from-[#0D0D0D] to-[#1A1A1A] border-b border-[#D4AF37]/30 py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-[#F7F7F7] mb-4 tracking-wide">MY AUCTIONS</h1>
-          <p className="text-xl text-[#E5E4E2]/70 tracking-wide">Manage your auction listings</p>
+      <header className="border-b border-white/5 py-48 bg-[#0D0D0D] relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#D4AF37]/5 blur-[180px] pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 text-center space-y-10 animate-fadeInUp">
+          <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full text-white/40 text-[10px] font-black tracking-[0.4em] uppercase italic leading-none">
+            <HiOutlineChartBar className="text-sm text-[#D4AF37]" />
+            Asset Management Terminal
+          </div>
+          <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter uppercase italic leading-none">
+            Strategic <span className="gold-shimmer-text not-italic">Index</span>
+          </h1>
+          <p className="text-[11px] text-white/20 max-w-xl mx-auto font-black tracking-[0.4em] uppercase leading-loose italic">
+            Comprehensive oversight of your institutional holdings and global liquidation protocols.
+          </p>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 -mt-8 mb-8">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-6 hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all duration-300">
-            <div className="text-3xl mb-2 text-[#D4AF37]">📦</div>
-            <div className="text-3xl font-bold text-[#F7F7F7]">{stats.total}</div>
-            <div className="text-sm text-[#E5E4E2]/70 tracking-wider uppercase">Total Auctions</div>
-          </div>
-          <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-6 hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all duration-300">
-            <div className="text-3xl mb-2 text-[#D4AF37]">✅</div>
-            <div className="text-3xl font-bold text-green-500">{stats.active}</div>
-            <div className="text-sm text-[#E5E4E2]/70 tracking-wider uppercase">Active</div>
-          </div>
-          <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-6 hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all duration-300">
-            <div className="text-3xl mb-2 text-[#D4AF37]">💰</div>
-            <div className="text-3xl font-bold text-purple-500">${stats.totalRevenue.toLocaleString()}</div>
-            <div className="text-sm text-[#E5E4E2]/70 tracking-wider uppercase">Total Revenue</div>
-          </div>
+      <section className="max-w-7xl mx-auto px-4 lg:px-8 -mt-24 relative z-20 animate-fadeInUp delay-200">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          {[
+            { label: 'Total Allocations', val: stats.total, icon: HiOutlineFolder, color: 'text-white/20' },
+            { label: 'Flux Protocols', val: stats.active, icon: HiOutlineArrowUpRight, color: 'text-[#D4AF37]' },
+            { label: 'Portfolio Equity', val: `${stats.totalRevenue.toLocaleString()}`, icon: HiOutlineCurrencyDollar, color: 'text-white' }
+          ].map((s, i) => (
+            <div key={i} className="bg-black/60 backdrop-blur-3xl p-12 rounded-[3.5rem] border border-white/5 shadow-[0_30px_100px_rgba(0,0,0,0.5)] space-y-8 group hover:border-[#D4AF37]/30 transition-all duration-1000 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
+              <s.icon className={`text-3xl ${s.color} group-hover:scale-110 transition-transform duration-700`} />
+              <div className="space-y-2">
+                <div className="text-5xl font-black text-white tracking-tighter leading-none italic uppercase">{s.val}</div>
+                <div className="text-[10px] text-white/10 font-black tracking-[0.4em] uppercase italic">{s.label}</div>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 pb-12">
-        <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex gap-2 flex-wrap">
-              {['all', 'active', 'closed'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => {
-                    setFilter(status);
-                    setCurrentPage(1); // Reset to first page when changing filter
-                  }}
-                  className={`px-4 py-2 rounded-xl font-bold tracking-wider transition-all duration-300 ${
-                    filter === status
-                      ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] shadow-lg hover:shadow-[0_0_18px_rgba(212,175,55,0.4)]'
-                      : 'bg-[#0D0D0D] border border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/20'
-                  }`}
-                >
-                  {status === 'all' ? 'ALL' : status.toUpperCase()}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-4 flex-wrap">
-              <label className="text-[#E5E4E2] font-bold tracking-wider uppercase">Sort by:</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 bg-[#0D0D0D] border border-[#D4AF37]/30 text-[#F7F7F7] rounded-xl font-bold tracking-wider focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
+      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-40">
+        <div className="bg-white/5 backdrop-blur-3xl border border-white/5 rounded-[4rem] p-12 mb-20 flex flex-col lg:flex-row lg:items-center justify-between gap-12 animate-fadeInUp delay-300">
+          <div className="flex gap-6 flex-wrap">
+            {['all', 'active', 'closed'].map((s) => (
+              <button
+                key={s}
+                onClick={() => { setFilter(s); setCurrentPage(1); }}
+                className={`px-12 py-5 rounded-[2rem] font-black text-[10px] tracking-[0.4em] transition-all duration-700 uppercase italic leading-none ${
+                  filter === s 
+                  ? 'bg-[#D4AF37] text-[#0D0D0D] shadow-[0_0_40px_rgba(212,175,55,0.3)]' 
+                  : 'text-white/20 border border-white/5 hover:text-white hover:border-white/10'
+                }`}
               >
-                <option value="latest" className="bg-[#0D0D0D]">LATEST FIRST</option>
-                <option value="oldest" className="bg-[#0D0D0D]">OLDEST FIRST</option>
-                <option value="price_high" className="bg-[#0D0D0D]">HIGHEST PRICE</option>
-                <option value="price_low" className="bg-[#0D0D0D]">LOWEST PRICE</option>
-                <option value="ending_soon" className="bg-[#0D0D0D]">ENDING SOON</option>
-              </select>
+                {s}
+              </button>
+            ))}
+          </div>
 
-              <Link
-                to="/create-item"
-                className="px-6 py-2 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] rounded-xl font-bold tracking-wider hover:from-[#B8860B] hover:to-[#D4AF37] transition-all duration-300 shadow-lg hover:shadow-[0_0_18px_rgba(212,175,55,0.4)] whitespace-nowrap"
-              >
-                + NEW AUCTION
-              </Link>
-            </div>
+          <div className="flex items-center gap-8 flex-wrap">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-10 py-5 bg-black/40 border border-white/5 text-white/40 rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/50 outline-none transition-all italic appearance-none cursor-pointer pr-16"
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.5rem center', backgroundSize: '1rem' }}
+            >
+              <option value="latest" className="bg-[#0D0D0D]">Latest Entry</option>
+              <option value="price_high" className="bg-[#0D0D0D]">Premium Value</option>
+              <option value="price_low" className="bg-[#0D0D0D]">Entry Value</option>
+              <option value="ending_soon" className="bg-[#0D0D0D]">Termination Flux</option>
+            </select>
+
+            <Link
+              to="/create-item"
+              className="px-14 py-5 bg-[#D4AF37] text-[#0D0D0D] rounded-[2rem] font-black text-[10px] tracking-[0.4em] uppercase shadow-2xl hover:bg-white transition-all flex items-center gap-4 italic leading-none group"
+            >
+              <HiOutlinePlus className="text-sm group-hover:rotate-90 transition-transform" />
+              Initialize Asset
+            </Link>
           </div>
         </div>
 
         {myAuctions.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {myAuctions.map((auction) => (
-              <div
-                key={auction._id}
-                className="bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] border border-[#D4AF37]/20 rounded-2xl shadow-2xl overflow-hidden hover:shadow-[0_20px_40px_rgba(212,175,55,0.3)] transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02]"
-              >
-                <div className="relative h-56 overflow-hidden">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 animate-fadeInUp delay-400">
+            {myAuctions.map((a) => (
+              <div key={a._id} className="bg-white/5 rounded-[4rem] border border-white/5 overflow-hidden hover:border-[#D4AF37]/40 transition-all duration-1000 group shadow-2xl relative">
+                <div className="relative aspect-[4/3] overflow-hidden">
                   <img 
-                    src={auction.image || 'https://via.placeholder.com/400x300?text=No+Image'}
-                    alt={auction.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
-                    }}
+                    src={a.image || 'https://via.placeholder.com/600x400?text=Restricted+Intel'} 
+                    alt={a.title} 
+                    className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 grayscale-[40%] group-hover:grayscale-0 opacity-80 group-hover:opacity-100" 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-transparent to-transparent opacity-60"></div>
-                  <div className="absolute top-4 right-4">
-                    <span className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider ${getStatusColor(auction.status)}`}>
-                      {auction.status?.toUpperCase()}
+                  <div className="absolute top-8 right-8">
+                    <span className={`px-6 py-2.5 rounded-2xl text-[9px] font-black tracking-[0.4em] uppercase border backdrop-blur-3xl italic leading-none ${
+                      a.status === 'active' 
+                      ? 'bg-[#D4AF37] text-[#0D0D0D] border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.4)]' 
+                      : 'bg-black/80 text-white/20 border-white/10'
+                    }`}>
+                      {a.status}
                     </span>
                   </div>
-                  {auction.status === 'active' && (
-                    <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md border border-[#D4AF37]/30 px-4 py-2 rounded-xl text-xs font-bold text-[#D4AF37] tracking-wider">
-                      ⏰ {calculateTimeLeft(auction.endDate)}
+                  {a.status === 'active' && (
+                    <div className="absolute bottom-8 left-8 bg-black/80 backdrop-blur-3xl border border-white/5 px-6 py-2.5 rounded-2xl text-[9px] font-black text-[#D4AF37] tracking-[0.3em] uppercase flex items-center gap-3 italic">
+                       <HiOutlineClock className="text-sm" /> {calculateTimeLeft(a.endDate)}
                     </div>
                   )}
                 </div>
 
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-[#F7F7F7] mb-3 line-clamp-1 tracking-wide">
-                    {auction.title}
-                  </h3>
-                  <p className="text-sm text-[#E5E4E2]/70 mb-4 line-clamp-2">
-                    {auction.description}
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-[#0D0D0D] p-3 rounded-xl border border-[#D4AF37]/20">
-                      <div className="text-xs text-[#D4AF37]/80 mb-1 tracking-wider uppercase">Current Bid</div>
-                      <div className="text-lg font-bold text-[#D4AF37]">${auction.currentBid.toLocaleString()}</div>
+                <div className="p-12 space-y-10">
+                  <h3 className="text-2xl font-black text-white hover:gold-shimmer-text transition-all duration-700 italic uppercase tracking-tighter line-clamp-1">{a.title}</h3>
+                  
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="bg-black/40 p-6 rounded-3xl border border-white/5 shadow-inner">
+                      <div className="text-[9px] text-white/10 font-black tracking-[0.4em] uppercase mb-2 italic">Current Position</div>
+                      <div className="text-2xl font-black text-white tracking-tighter gold-shimmer-text italic leading-none">${a.currentBid.toLocaleString()}</div>
                     </div>
-                    <div className="bg-[#0D0D0D] p-3 rounded-xl border border-[#D4AF37]/20">
-                      <div className="text-xs text-[#D4AF37]/80 mb-1 tracking-wider uppercase">Starting Bid</div>
-                      <div className="text-lg font-bold text-[#F7F7F7]">${auction.startingPrice.toLocaleString()}</div>
+                    <div className="bg-black/40 p-6 rounded-3xl border border-white/5 shadow-inner">
+                      <div className="text-[9px] text-white/10 font-black tracking-[0.4em] uppercase mb-2 italic">Baseline</div>
+                      <div className="text-2xl font-black text-white/20 tracking-tighter italic leading-none">${a.startingPrice.toLocaleString()}</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between mb-4 text-sm text-[#E5E4E2]/70">
-                    <span className="tracking-wider uppercase">📂 {auction.category}</span>
-                    <span className="tracking-wider uppercase">📅 {new Date(auction.createdAt).toLocaleDateString()}</span>
+                  <div className="flex items-center justify-between border-y border-white/5 py-8">
+                    <div className="flex items-center gap-3 text-[10px] font-black text-white/20 uppercase tracking-[0.3em] italic">
+                      <HiOutlineScale className="text-sm text-[#D4AF37]" /> {a.category}
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px] font-black text-white/10 uppercase tracking-[0.3em] italic">
+                       {new Date(a.createdAt).toLocaleDateString().toUpperCase()}
+                    </div>
                   </div>
 
-                  <div className="flex gap-2">
-                    <Link
-                      to={`/items/${auction._id}`}
-                      className="flex-1 text-center px-4 py-3 bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/30 text-[#D4AF37] rounded-xl font-bold tracking-wider hover:bg-[#D4AF37] hover:text-[#0D0D0D] transition-all duration-300"
-                    >
-                      VIEW DETAILS
+                  <div className="flex gap-6 pt-4">
+                    <Link to={`/items/${a._id}`} className="flex-1 flex items-center justify-center gap-3 px-8 py-5 bg-white/5 border border-white/10 text-white/40 rounded-3xl font-black text-[10px] tracking-[0.4em] uppercase hover:text-white hover:border-[#D4AF37]/50 transition-all italic leading-none group">
+                      Protocol Analysis <HiOutlineArrowRight className="text-sm group-hover:translate-x-2 transition-transform" />
                     </Link>
-                    <Link
-                      to={`/update-item/${auction._id}`}
-                      className="px-4 py-3 bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/30 text-[#D4AF37] rounded-xl font-bold tracking-wider hover:bg-[#D4AF37] hover:text-[#0D0D0D] transition-all duration-300"
-                      title="Edit"
-                    >
-                      ✏️
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(auction._id)}
-                      className="px-4 py-3 bg-[#1A1A1A] backdrop-blur-xl border border-red-500/30 text-red-500 rounded-xl font-bold tracking-wider hover:bg-red-500 hover:text-[#0D0D0D] transition-all duration-300"
-                      title="Delete"
-                    >
-                      🗑️
-                    </button>
+                    <div className="flex gap-4">
+                      <Link to={`/update-item/${a._id}`} className="p-5 bg-white/5 border border-white/10 text-white/20 rounded-3xl hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-all flex items-center justify-center" title="Modify Protocol"><HiOutlinePencilSquare className="text-xl" /></Link>
+                      <button onClick={() => handleDelete(a._id)} className="p-5 bg-red-500/5 border border-red-500/20 text-red-500 rounded-3xl hover:bg-red-500 hover:text-white transition-all shadow-xl flex items-center justify-center" title="Decommission Asset"><HiOutlineTrash className="text-xl" /></button>
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-12 text-center">
-            <div className="text-6xl mb-4 text-[#D4AF37]">📦</div>
-            <h3 className="text-2xl font-bold text-[#F7F7F7] mb-2 tracking-wide">
-              {filter === 'all' ? 'NO AUCTIONS YET' : `NO ${filter.toUpperCase()} AUCTIONS`}
-            </h3>
-            <p className="text-[#E5E4E2]/70 mb-6">
-              {filter === 'all' 
-                ? "Create your first auction to get started!"
-                : `You don't have any ${filter} auctions.`}
-            </p>
-            <Link
-              to="/create-item"
-              className="inline-block px-8 py-4 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] rounded-xl font-bold tracking-wider hover:from-[#B8860B] hover:to-[#D4AF37] transition-all duration-300 shadow-lg hover:shadow-[0_0_18px_rgba(212,175,55,0.4)]"
-            >
-              CREATE YOUR FIRST AUCTION
+          <div className="text-center py-60 bg-white/5 rounded-[5rem] border border-white/5 border-dashed space-y-12 backdrop-blur-3xl animate-pulse">
+            <div className="relative inline-block">
+              <HiOutlineInbox className="text-9xl mx-auto text-white/5" />
+              <div className="absolute inset-0 bg-[#D4AF37]/10 blur-[100px] rounded-full" />
+            </div>
+            <div className="space-y-6">
+              <h3 className="text-4xl font-black text-white tracking-tighter uppercase italic">Portfolio Void</h3>
+              <p className="text-[11px] text-white/10 font-black tracking-[0.5em] uppercase italic">No active liquidation protocols identified in current registry.</p>
+            </div>
+            <Link to="/create-item" className="inline-block px-16 py-6 bg-[#D4AF37] text-[#0D0D0D] rounded-3xl font-black text-[11px] tracking-[0.5em] uppercase hover:bg-white transition-all shadow-2xl italic leading-none">
+              Initialize First Allocation
             </Link>
           </div>
         )}
 
         {totalPages > 1 && (
-          <div className="mt-12 flex flex-col items-center">
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-lg font-bold tracking-wider ${
-                  currentPage === 1
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#D4AF37] text-[#0D0D0D] hover:bg-[#E5E4E2] transition-all'
-                }`}
-              >
-                Previous
-              </button>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-4 py-2 rounded-lg font-bold tracking-wider ${
-                        currentPage === page
-                          ? 'bg-[#D4AF37] text-[#0D0D0D]'
-                          : 'bg-[#1A1A1A] text-[#E5E4E2] border border-[#D4AF37]/30 hover:bg-[#D4AF37]/20'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                } else if (page === currentPage - 2 || page === currentPage + 2) {
-                  return <span key={page} className="px-2">...</span>;
-                }
-                return null;
-              })}
-              
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-lg font-bold tracking-wider ${
-                  currentPage === totalPages
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#D4AF37] text-[#0D0D0D] hover:bg-[#E5E4E2] transition-all'
-                }`}
-              >
-                Next
-              </button>
+          <nav className="mt-32 flex justify-center gap-8">
+            <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="px-14 py-5 rounded-[2rem] font-black text-[10px] tracking-[0.4em] uppercase bg-white/5 text-white/20 disabled:opacity-0 active:scale-95 border border-white/5 transition-all hover:text-white italic leading-none">Previous</button>
+            <div className="flex gap-4">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                <button key={p} onClick={() => setCurrentPage(p)} className={`w-16 h-16 rounded-2xl font-black text-[11px] transition-all border italic ${currentPage === p ? 'bg-[#D4AF37] text-[#0D0D0D] border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.3)] scale-110' : 'bg-white/5 text-white/20 border-white/5 hover:bg-white/10'}`}>{p}</button>
+              ))}
             </div>
-            
-            <p className="mt-4 text-[#E5E4E2]/70 text-sm">
-              Page {currentPage} of {totalPages} ({totalItems} total auctions)
-            </p>
-          </div>
+            <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className="px-14 py-5 rounded-[2rem] font-black text-[10px] tracking-[0.4em] uppercase bg-white/5 text-white/20 disabled:opacity-0 active:scale-95 border border-white/5 transition-all hover:text-white italic leading-none">Next</button>
+          </nav>
         )}
-      </div>
+      </main>
     </div>
   );
 };

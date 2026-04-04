@@ -1,120 +1,134 @@
+const asyncHandler = require('express-async-handler');
 const Review = require('../models/Review');
 const AuctionItem = require('../models/AuctionItem');
 const User = require('../models/User');
+const ErrorResponse = require('../utils/errorResponse');
 
+/**
+ * @desc    Establish new performance audit (Create Review)
+ * @route   POST /api/reviews
+ * @access  Private (Bidder/Participant)
+ */
+const createReview = asyncHandler(async (req, res, next) => {
+  const { rating, feedback, auctionId } = req.body;
+  const userId = req.user._id;
 
-const createReview = async (req, res) => {
-  try {
-    const { rating, feedback, auctionId } = req.body;
-    const userId = req.user._id;
+  /**
+   * Validation: Compliance rating must align with protocol standards [1-5]
+   */
+  if (rating < 1 || rating > 5) {
+    return next(new ErrorResponse('Compliance Failure: Rating must be constrained between 1 and 5.', 400));
+  }
 
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
-    }
+  const auction = await AuctionItem.findById(auctionId);
+  if (!auction) {
+    return next(new ErrorResponse('Registry Failure: Targeted asset identifier not found.', 404));
+  }
 
-    const auction = await AuctionItem.findById(auctionId);
-    if (!auction) {
-      return res.status(404).json({ message: 'Auction not found' });
-    }
+  /**
+   * Protocol Analysis: Audit can only be initiated post-liquidation
+   */
+  if (auction.status !== 'closed') {
+    return next(new ErrorResponse('Protocol Violation: Performance audits are restricted to completed liquidations.', 400));
+  }
 
+  /**
+   * Conflict of Interest: Entities cannot audit their own asset allocations
+   */
+  if (auction.createdBy.toString() === userId.toString()) {
+    return next(new ErrorResponse('Conflict of Interest: Entities are prohibited from auditing their own allocations.', 403));
+  }
 
-    if (auction.status !== 'closed') {
-      return res.status(400).json({ message: 'Can only review completed auctions' });
-    }
+  /**
+   * Participation Verification: Audit rights reserved for verified participants
+   */
+  const Bid = require('../models/Bid');
+  const userBid = await Bid.findOne({ item: auctionId, user: userId });
+  if (!userBid) {
+    return next(new ErrorResponse('Access Denied: Performance audit rights are reserved for verified participants.', 403));
+  }
 
-    if (auction.createdBy.toString() === userId.toString()) {
-      return res.status(403).json({ message: 'Cannot review your own auction' });
-    }
+  const auctioneerId = auction.createdBy;
 
-    const Bid = require('../models/Bid');
-    const userBid = await Bid.findOne({ item: auctionId, user: userId });
-    if (!userBid) {
-      return res.status(403).json({ message: 'Only participants can review auctions' });
-    }
+  const review = await Review.create({
+    rating,
+    feedback,
+    auctionId,
+    reviewerId: userId,
+    auctioneerId: auctioneerId
+  });
 
-    const auctioneerId = auction.createdBy;
+  await review.populate([
+    { path: 'reviewerId', select: 'name email' },
+    { path: 'auctionId', select: 'title' },
+    { path: 'auctioneerId', select: 'name email' }
+  ]);
 
-    const review = await Review.create({
-      rating,
-      feedback,
-      auctionId,
-      reviewerId: userId,
-      auctioneerId: auctioneerId
-    });
+  res.status(201).json({
+    success: true,
+    message: 'Performance audit successfully registered within the institutional registry.',
+    review
+  });
+});
 
-    await review.populate([
+/**
+ * @desc    Retrieve qualitative audit log for specific asset
+ * @route   GET /api/reviews/auction/:auctionId
+ * @access  Public
+ */
+const getReviewsByAuction = asyncHandler(async (req, res, next) => {
+  const { auctionId } = req.params;
+
+  const auction = await AuctionItem.findById(auctionId);
+  if (!auction) {
+    return next(new ErrorResponse('Registry Failure: Targeted asset identifier not found.', 404));
+  }
+
+  const reviews = await Review.find({ auctionId })
+    .populate([
       { path: 'reviewerId', select: 'name email' },
       { path: 'auctionId', select: 'title' },
       { path: 'auctioneerId', select: 'name email' }
-    ]);
+    ])
+    .sort({ createdAt: -1 }); 
 
-    res.status(201).json({
-      success: true,
-      message: 'Review created successfully',
-      review
-    });
-  } catch (error) {
-    console.error('Create review error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+  res.status(200).json({
+    success: true,
+    message: 'Audit log successfully synchronized.',
+    count: reviews.length,
+    reviews
+  });
+});
+
+/**
+ * @desc    Rescind performance audit (Delete Review)
+ * @route   DELETE /api/reviews/:id
+ * @access  Private (Owner, Superadmin)
+ */
+const deleteReview = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.user._id;
+  const userRole = req.user.role;
+
+  const review = await Review.findById(id);
+  if (!review) {
+    return next(new ErrorResponse('Registry Failure: Targeted audit identifier not found.', 404));
   }
-};
 
-
-const getReviewsByAuction = async (req, res) => {
-  try {
-    const { auctionId } = req.params;
-
-    const auction = await AuctionItem.findById(auctionId);
-    if (!auction) {
-      return res.status(404).json({ message: 'Auction not found' });
-    }
-
-    const reviews = await Review.find({ auctionId })
-      .populate([
-        { path: 'reviewerId', select: 'name email' },
-        { path: 'auctionId', select: 'title' },
-        { path: 'auctioneerId', select: 'name email' }
-      ])
-      .sort({ createdAt: -1 }); 
-
-    res.status(200).json({
-      success: true,
-      count: reviews.length,
-      reviews
-    });
-  } catch (error) {
-    console.error('Get reviews error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+  /**
+   * Authorization: Audit modification rights restricted to the original auditor or global governance
+   */
+  if (review.reviewerId.toString() !== userId.toString() && userRole !== 'superadmin') {
+    return next(new ErrorResponse('Access Denied: Insufficient privileges to rescind this audit.', 403));
   }
-};
 
+  await Review.findByIdAndDelete(id);
 
-const deleteReview = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user._id;
-    const userRole = req.user.role;
-
-    const review = await Review.findById(id);
-    if (!review) {
-      return res.status(404).json({ message: 'Review not found' });
-    }
-
-    if (review.reviewerId.toString() !== userId.toString() && userRole !== 'superadmin') {
-      return res.status(403).json({ message: 'Not authorized to delete this review' });
-    }
-
-    await Review.findByIdAndDelete(id);
-
-    res.status(200).json({
-      success: true,
-      message: 'Review deleted successfully'
-    });
-  } catch (error) {
-    console.error('Delete review error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
+  res.status(200).json({
+    success: true,
+    message: 'Performance audit successfully rescinded and purged from the registry.'
+  });
+});
 
 module.exports = {
   createReview,

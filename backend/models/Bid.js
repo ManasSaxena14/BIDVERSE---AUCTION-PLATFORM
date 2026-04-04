@@ -13,7 +13,7 @@ const bidSchema = new mongoose.Schema({
   },
   amount: {
     type: Number,
-    required: [true, 'Bid amount is required'],
+    required: [true, 'Capital allocation amount is required'],
     min: 0
   },
   createdAt: {
@@ -22,27 +22,37 @@ const bidSchema = new mongoose.Schema({
   }
 });
 
+/**
+ * Performance Optimization: High-frequency transaction indexes
+ */
+bidSchema.index({ item: 1, amount: -1 }); // Optimized for "Highest Bid" lookups
+bidSchema.index({ user: 1, createdAt: -1 }); // Optimized for user proposal history
 
+/**
+ * Integrity Guard: Ensure all proposals meet the strictly increasing valuation protocol
+ */
 bidSchema.pre('save', async function(next) {
   const AuctionItem = mongoose.model('AuctionItem');
   const item = await AuctionItem.findById(this.item);
   
   if (!item) {
-    return next(new Error('Auction item not found'));
+    return next(new Error('Registry Failure: Targeted asset not found.'));
   }
   
   if (this.amount <= item.currentBid) {
-    return next(new Error(`Bid must be greater than current bid of $${item.currentBid}`));
+    return next(new Error(`Valuation Failure: Allocation must exceed current threshold of $${item.currentBid}`));
   }
   
   next();
 });
 
-
+/**
+ * Synchronization: Update the asset's current valuation post-allocation
+ */
 bidSchema.post('save', async function() {
   const AuctionItem = mongoose.model('AuctionItem');
-
   await AuctionItem.updateCurrentBid(this.item);
 });
 
 module.exports = mongoose.model('Bid', bidSchema);
+

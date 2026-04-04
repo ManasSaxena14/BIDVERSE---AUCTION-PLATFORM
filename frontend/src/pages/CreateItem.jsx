@@ -2,6 +2,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useItems } from '../context/ItemContext';
 import { useToast } from '../context/ToastContext';
+import { 
+  HiOutlinePencilSquare, 
+  HiOutlineCube, 
+  HiOutlineCurrencyDollar, 
+  HiOutlineTag, 
+  HiOutlinePhoto, 
+  HiOutlineCalendarDays, 
+  HiOutlineCheckCircle, 
+  HiOutlineXMark,
+  HiOutlinePlusCircle,
+  HiOutlineArrowLeft
+} from 'react-icons/hi2';
 
 const CreateItem = () => {
   const [formData, setFormData] = useState({
@@ -30,53 +42,94 @@ const CreateItem = () => {
 
     try {
       await createItem(formData);
-      addToast('Auction item created successfully!', 'success');
-      navigate('/');
+      addToast('Asset listing protocol initialized.', 'success');
+      navigate('/my-auctions');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create item');
-      addToast(err.response?.data?.message || 'Failed to create item', 'error');
+      const msg = err.response?.data?.message || 'Protocol initialization failure.';
+      setError(msg);
+      addToast(msg, 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#0D0D0D] py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <div className="inline-block px-6 py-3 bg-white/5 backdrop-blur-xl border border-[#D4AF37]/30 rounded-full text-[#D4AF37] text-sm font-bold tracking-wider mb-6">
-            CREATE AUCTION
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-[#F7F7F7] tracking-wide mb-4">List Your Exclusive Item</h1>
-          <p className="text-xl text-[#E5E4E2] max-w-2xl mx-auto font-light">Showcase your valuable item to our community of discerning collectors</p>
-        </div>
+  const categories = [
+    'Horology', 'Fine Art', 'Real Estate', 'Blue Chip Collectibles', 
+    'Jewelry & Gems', 'Antiques', 'Couture', 'Automotive'
+  ];
 
-        <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
+  return (
+    <div className="min-h-screen bg-[#0D0D0D] py-40 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
+        
+        <header className="mb-24 text-center space-y-8 animate-fadeInUp">
+          <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full text-white/40 text-[10px] font-black tracking-[0.4em] uppercase leading-none">
+            <HiOutlinePlusCircle className="text-sm text-[#D4AF37]" />
+            Asset Allocation Terminal
+          </div>
+          <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter uppercase italic leading-none">
+            Protocol <span className="gold-shimmer-text not-italic">Initialization</span>
+          </h1>
+          <p className="max-w-xl mx-auto text-white/20 text-[11px] font-black tracking-[0.3em] uppercase leading-relaxed italic">
+            Authorize the entry of high-valuation holdings into the global archival network.
+          </p>
+        </header>
+
+        <section className="bg-white/5 backdrop-blur-3xl border border-white/5 rounded-[4rem] p-12 md:p-20 shadow-[0_30px_100px_rgba(0,0,0,0.5)] relative overflow-hidden animate-fadeInUp delay-200">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#D4AF37]/5 blur-[160px] pointer-events-none" />
+          
           {error && (
-            <div className="bg-red-900/50 border border-red-700/50 text-red-200 px-6 py-4 rounded-xl mb-8 text-center font-medium tracking-wide">
+            <div className="mb-12 p-6 bg-red-500/5 border border-red-500/20 rounded-3xl flex items-center gap-5 text-red-500 text-[10px] font-black tracking-[0.4em] uppercase shadow-inner">
+              <HiOutlineXMark className="text-xl" />
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div>
-              <label className="block text-lg font-bold text-[#F7F7F7] mb-3 tracking-wide">
-                ITEM TITLE *
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                className="w-full px-6 py-4 bg-[#0D0D0D] border-2 border-[#D4AF37]/30 rounded-xl text-[#F7F7F7] text-lg focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 transition-all duration-300 placeholder-[#E5E4E2]/50"
-                placeholder="e.g., 1950s Rolex Submariner"
-              />
+          <form onSubmit={handleSubmit} className="space-y-16">
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+              <div className="space-y-4">
+                <label className="flex items-center gap-3 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic leading-none">
+                  <HiOutlinePencilSquare className="text-sm" /> Asset Identity
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  placeholder="Official asset nomenclature..."
+                  className="w-full px-8 py-6 bg-black/40 border border-white/5 rounded-2xl text-white text-[11px] font-black tracking-[0.2em] uppercase focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/50 transition-all outline-none italic placeholder:text-white/5 shadow-inner"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <label className="flex items-center gap-3 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic leading-none">
+                  <HiOutlineTag className="text-sm" /> Classification
+                </label>
+                <div className="relative">
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-8 py-6 bg-black/40 border border-white/5 rounded-2xl text-white text-[11px] font-black tracking-[0.2em] uppercase focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/50 transition-all outline-none appearance-none cursor-pointer italic"
+                  >
+                    <option value="" className="bg-[#0D0D0D]">Index Class</option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat} className="bg-[#0D0D0D]">{cat}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-white/20">
+                    <HiOutlineCube className="text-sm" />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-lg font-bold text-[#F7F7F7] mb-3 tracking-wide">
-                DETAILED DESCRIPTION *
+            <div className="space-y-4">
+              <label className="flex items-center gap-3 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic leading-none">
+                <HiOutlineCube className="text-sm" /> Asset Intelligence
               </label>
               <textarea
                 name="description"
@@ -84,15 +137,15 @@ const CreateItem = () => {
                 onChange={handleChange}
                 required
                 rows={6}
-                className="w-full px-6 py-4 bg-[#0D0D0D] border-2 border-[#D4AF37]/30 rounded-xl text-[#F7F7F7] text-lg focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 transition-all duration-300 placeholder-[#E5E4E2]/50"
-                placeholder="Provide a comprehensive description of your item, including condition, provenance, and any notable features..."
+                placeholder="Comprehensive technical specifications, provenance data, and physical state report..."
+                className="w-full px-8 py-6 bg-black/40 border border-white/5 rounded-3xl text-white text-[11px] font-black tracking-[0.2em] leading-loose uppercase focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/50 transition-all outline-none italic placeholder:text-white/5 shadow-inner resize-none"
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-lg font-bold text-[#F7F7F7] mb-3 tracking-wide">
-                  STARTING PRICE ($) *
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+              <div className="space-y-4">
+                <label className="flex items-center gap-3 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic leading-none">
+                  <HiOutlineCurrencyDollar className="text-sm" /> Reserve Valuation (USD)
                 </label>
                 <input
                   type="number"
@@ -102,87 +155,75 @@ const CreateItem = () => {
                   required
                   min="0"
                   step="0.01"
-                  className="w-full px-6 py-4 bg-[#0D0D0D] border-2 border-[#D4AF37]/30 rounded-xl text-[#F7F7F7] text-lg focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 transition-all duration-300 placeholder-[#E5E4E2]/50"
-                  placeholder="1000"
+                  placeholder="0.00"
+                  className="w-full px-8 py-6 bg-black/40 border border-white/5 rounded-2xl text-white text-[11px] font-black tracking-[0.2em] uppercase focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/50 transition-all outline-none italic placeholder:text-white/5 shadow-inner"
                 />
               </div>
 
-              <div>
-                <label className="block text-lg font-bold text-[#F7F7F7] mb-3 tracking-wide">
-                  CATEGORY *
+              <div className="space-y-4">
+                <label className="flex items-center gap-3 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic leading-none">
+                  <HiOutlineCalendarDays className="text-sm" /> Protocol Termination
                 </label>
-                <select
-                  name="category"
-                  value={formData.category}
+                <input
+                  type="datetime-local"
+                  name="endDate"
+                  value={formData.endDate}
                   onChange={handleChange}
                   required
-                  className="w-full px-6 py-4 bg-[#0D0D0D] border-2 border-[#D4AF37]/30 rounded-xl text-[#F7F7F7] text-lg focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 transition-all duration-300"
-                >
-                  <option value="">Select a category</option>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Art">Art</option>
-                  <option value="Collectibles">Collectibles</option>
-                  <option value="Jewelry">Jewelry</option>
-                  <option value="Antiques">Antiques</option>
-                  <option value="Fashion">Fashion</option>
-                  <option value="Automotive">Automotive</option>
-                  <option value="Real Estate">Real Estate</option>
-                </select>
+                  className="w-full px-8 py-6 bg-black/40 border border-white/5 rounded-2xl text-white text-[11px] font-black tracking-[0.2em] uppercase focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/50 transition-all outline-none italic invert opacity-40 hover:opacity-100"
+                />
               </div>
             </div>
 
-            <div>
-              <label className="block text-lg font-bold text-[#F7F7F7] mb-3 tracking-wide">
-                IMAGE URL
+            <div className="space-y-4">
+              <label className="flex items-center gap-3 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic leading-none">
+                <HiOutlinePhoto className="text-sm" /> Visual Architecture URL
               </label>
               <input
                 type="url"
                 name="image"
                 value={formData.image}
                 onChange={handleChange}
-                className="w-full px-6 py-4 bg-[#0D0D0D] border-2 border-[#D4AF37]/30 rounded-xl text-[#F7F7F7] text-lg focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 transition-all duration-300 placeholder-[#E5E4E2]/50"
-                
+                placeholder="https://prestige-vault.io/asset-preview.jpg"
+                className="w-full px-8 py-6 bg-black/40 border border-white/5 rounded-2xl text-white text-[11px] font-black tracking-[0.2em] uppercase focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/50 transition-all outline-none italic placeholder:text-white/5 shadow-inner"
               />
-              <p className="text-sm text-[#E5E4E2]/70 mt-2 font-light tracking-wide">
-                High-resolution images are recommended for luxury items
-              </p>
+              <div className="flex items-center gap-3 ml-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+                <p className="text-[9px] font-black text-white/20 tracking-[0.3em] uppercase italic">
+                  High-fidelity visual references significantly optimize engagement metrics.
+                </p>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-lg font-bold text-[#F7F7F7] mb-3 tracking-wide">
-                AUCTION END DATE & TIME *
-              </label>
-              <input
-                type="datetime-local"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleChange}
-                required
-                className="w-full px-6 py-4 bg-[#0D0D0D] border-2 border-[#D4AF37]/30 rounded-xl text-[#F7F7F7] text-lg focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 transition-all duration-300"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-6 pt-8">
+            <div className="flex flex-col sm:flex-row gap-8 pt-10">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 min-w-[200px] px-8 py-5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] rounded-xl font-bold text-lg tracking-wider hover:from-[#B8860B] hover:to-[#D4AF37] transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-14 py-6 bg-[#D4AF37] text-[#0D0D0D] rounded-3xl font-black text-[11px] tracking-[0.5em] uppercase hover:bg-white transition-all flex items-center justify-center gap-4 shadow-[0_20px_50px_rgba(212,175,55,0.2)] disabled:opacity-50 italic group"
               >
-                {loading ? 'CREATING ITEM...' : 'CREATE AUCTION ITEM'}
+                {loading ? 'Processing Protocol...' : (
+                  <>
+                    <HiOutlineCheckCircle className="text-lg group-hover:scale-110 transition-transform" />
+                    Commit Allocation
+                  </>
+                )}
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/')}
-                className="flex-1 min-w-[200px] px-8 py-5 bg-[#1A1A1A] backdrop-blur-xl border-2 border-[#D4AF37] text-[#D4AF37] rounded-xl font-bold text-lg tracking-wider hover:bg-[#D4AF37] hover:text-[#0D0D0D] transition-all duration-300"
+                onClick={() => navigate(-1)}
+                className="px-14 py-6 bg-white/5 border border-white/10 text-white/40 rounded-3xl font-black text-[11px] tracking-[0.5em] uppercase hover:text-white hover:border-white/20 transition-all flex items-center justify-center gap-4 italic"
               >
-                CANCEL
+                <HiOutlineArrowLeft className="text-sm" />
+                Abort
               </button>
             </div>
           </form>
-        </div>
+        </section>
       </div>
     </div>
   );
 };
 
 export default CreateItem;
+
+

@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import { authService } from '../services';
 
 const AuthContext = createContext();
@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    
     const currentUser = authService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
@@ -24,7 +23,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const signup = async (userData) => {
+  const signup = useCallback(async (userData) => {
     try {
       const response = await authService.signup(userData);
       setUser(response.user);
@@ -32,9 +31,9 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, []);
 
-  const login = async (credentials) => {
+  const login = useCallback(async (credentials) => {
     try {
       const response = await authService.login(credentials);
       setUser(response.user);
@@ -42,22 +41,22 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     authService.logout();
     setUser(null);
-  };
+  }, []);
 
-  const isAuthenticated = () => {
+  const isAuthenticated = useCallback(() => {
     return !!user;
-  };
+  }, [user]);
 
-  const hasRole = (...roles) => {
+  const hasRole = useCallback((...roles) => {
     return user && roles.includes(user.role);
-  };
+  }, [user]);
   
-  const updateProfile = async (userData) => {
+  const updateProfile = useCallback(async (userData) => {
     try {
       const response = await authService.updateMe(userData);
       setUser(response.user);
@@ -65,9 +64,9 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       throw error;
     }
-  };
+  }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     loading,
     signup,
@@ -76,7 +75,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     hasRole,
     updateProfile
-  };
+  }), [user, loading, signup, login, logout, isAuthenticated, hasRole, updateProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

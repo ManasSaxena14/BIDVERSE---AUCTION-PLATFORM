@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 
+/**
+ * Capital Settlement Protocol (Commission Schema)
+ * Defines the financial redistribution parameters for completed asset liquidations.
+ */
 const commissionSchema = new mongoose.Schema({
   auctionItem: {
     type: mongoose.Schema.Types.ObjectId,
@@ -47,7 +51,9 @@ const commissionSchema = new mongoose.Schema({
   }
 });
 
-
+/**
+ * Settlement Calculation: Automated redistribution logic for capital inflow
+ */
 commissionSchema.pre('save', function(next) {
   if (this.isNew) {
     this.commissionAmount = (this.finalBidAmount * this.commissionRate) / 100;
@@ -57,3 +63,4 @@ commissionSchema.pre('save', function(next) {
 });
 
 module.exports = mongoose.model('Commission', commissionSchema);
+

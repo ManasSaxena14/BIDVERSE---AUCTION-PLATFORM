@@ -1,98 +1,98 @@
+const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
+const ErrorResponse = require('../utils/errorResponse');
 
+/**
+ * @desc    Retrieve all registered entities (Superadmin Governance)
+ * @route   GET /api/users
+ * @access  Private (Superadmin)
+ */
+const getAllUsers = asyncHandler(async (req, res, next) => {
+  const users = await User.find().select('-password');
+  
+  res.status(200).json({
+    success: true,
+    count: users.length,
+    users
+  });
+});
 
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find().select('-password');
-    
-    res.status(200).json({
-      success: true,
-      count: users.length,
-      users
-    });
-  } catch (error) {
-    console.error('Get users error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+/**
+ * @desc    Retrieve specific entity intelligence (Superadmin Governance)
+ * @route   GET /api/users/:id
+ * @access  Private (Superadmin)
+ */
+const getUserById = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id).select('-password');
+  
+  if (!user) {
+    return next(new ErrorResponse('Identity Retrieval Failure: Specified identifier not found.', 404));
   }
-};
 
+  res.status(200).json({
+    success: true,
+    user
+  });
+});
 
-const getUserById = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select('-password');
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+/**
+ * @desc    Modify entity parameters (Superadmin Governance)
+ * @route   PUT /api/users/:id
+ * @access  Private (Superadmin)
+ */
+const updateUser = asyncHandler(async (req, res, next) => {
+  const { name, email, role, status } = req.body;
 
-    res.status(200).json({
-      success: true,
-      user
-    });
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    return next(new ErrorResponse('Identity Modification Failure: Specified identifier not found.', 404));
   }
-};
 
+  if (name) user.name = name;
+  if (email) user.email = email;
+  if (role) user.role = role;
+  if (status) user.status = status;
 
-const updateUser = async (req, res) => {
-  try {
-    const { name, email, role } = req.body;
+  await user.save();
 
-    const user = await User.findById(req.params.id);
+  const updatedUser = await User.findById(user._id).select('-password');
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+  res.status(200).json({
+    success: true,
+    message: 'Entity identity parameters successfully modified.',
+    user: updatedUser
+  });
+});
 
+/**
+ * @desc    Terminate entity identity and associated assets (Superadmin Governance)
+ * @route   DELETE /api/users/:id
+ * @access  Private (Superadmin)
+ */
+const deleteUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
 
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (role) user.role = role;
-
-    await user.save();
-
-    const updatedUser = await User.findById(user._id).select('-password');
-
-    res.status(200).json({
-      success: true,
-      message: 'User updated successfully',
-      user: updatedUser
-    });
-  } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+  if (!user) {
+    return next(new ErrorResponse('Identity Termination Failure: Specified identifier not found.', 404));
   }
-};
 
+  /**
+   * Cascade Liquidation: Purge all assets and capital proposals associated with this identity
+   */
+  const AuctionItem = require('../models/AuctionItem');
+  const Bid = require('../models/Bid');
+  
+  await AuctionItem.deleteMany({ createdBy: req.params.id });
+  await Bid.deleteMany({ user: req.params.id });
 
-const deleteUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
+  await User.findByIdAndDelete(req.params.id);
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-
-    const AuctionItem = require('../models/AuctionItem');
-    const Bid = require('../models/Bid');
-    
-    await AuctionItem.deleteMany({ createdBy: req.params.id });
-    await Bid.deleteMany({ user: req.params.id });
-
-    await User.findByIdAndDelete(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      message: 'User and associated data deleted successfully'
-    });
-  } catch (error) {
-    console.error('Delete user error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
+  res.status(200).json({
+    success: true,
+    message: 'Entity identity and all associated asset/bid records successfully purged from the registry.'
+  });
+});
 
 module.exports = {
   getAllUsers,
@@ -100,3 +100,4 @@ module.exports = {
   updateUser,
   deleteUser
 };
+

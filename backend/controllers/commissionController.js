@@ -1,180 +1,189 @@
+const asyncHandler = require('express-async-handler');
 const Commission = require('../models/Commission');
 const AuctionItem = require('../models/AuctionItem');
 const Bid = require('../models/Bid');
+const ErrorResponse = require('../utils/errorResponse');
 
+/**
+ * @desc    Establish new capital settlement (Create Commission)
+ * @route   POST /api/commissions
+ * @access  Private (Superadmin)
+ */
+const createCommission = asyncHandler(async (req, res, next) => {
+  const { auctionItemId, commissionRate } = req.body;
 
-const createCommission = async (req, res) => {
-  try {
-    const { auctionItemId, commissionRate } = req.body;
-
-    const item = await AuctionItem.findById(auctionItemId);
-    if (!item) {
-      return res.status(404).json({ message: 'Auction item not found' });
-    }
-
-    if (item.status !== 'closed') {
-      return res.status(400).json({ message: 'Auction must be closed to create commission' });
-    }
-
-
-    const winningBid = await Bid.findOne({ item: auctionItemId })
-      .sort({ amount: -1 })
-      .populate('user', 'name email');
-
-    if (!winningBid) {
-      return res.status(400).json({ message: 'No bids found for this auction' });
-    }
-
-
-    const existingCommission = await Commission.findOne({ auctionItem: auctionItemId });
-    if (existingCommission) {
-      return res.status(400).json({ message: 'Commission already created for this auction' });
-    }
-
-    const commission = await Commission.create({
-      auctionItem: auctionItemId,
-      seller: item.createdBy,
-      winner: winningBid.user._id,
-      finalBidAmount: winningBid.amount,
-      commissionRate: commissionRate || 10
-    });
-
-    const populatedCommission = await Commission.findById(commission._id)
-      .populate('auctionItem', 'title')
-      .populate('seller', 'name email')
-      .populate('winner', 'name email');
-
-    res.status(201).json({
-      success: true,
-      message: 'Commission created successfully',
-      commission: populatedCommission
-    });
-  } catch (error) {
-    console.error('Create commission error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+  const item = await AuctionItem.findById(auctionItemId);
+  if (!item) {
+    return next(new ErrorResponse('Registry Failure: Targeted asset identifier not found.', 404));
   }
-};
 
-
-const getCommissions = async (req, res) => {
-  try {
-    const { status, seller } = req.query;
-    const query = {};
-
-    if (status) query.status = status;
-    if (seller) query.seller = seller;
-
-
-    if (req.user.role !== 'superadmin') {
-      query.seller = req.user._id;
-    }
-
-    const commissions = await Commission.find(query)
-      .populate('auctionItem', 'title')
-      .populate('seller', 'name email')
-      .populate('winner', 'name email')
-      .sort({ createdAt: -1 });
-
-    const totalCommission = commissions.reduce((sum, c) => sum + c.commissionAmount, 0);
-    const totalPayout = commissions.reduce((sum, c) => sum + c.sellerPayout, 0);
-
-    res.status(200).json({
-      success: true,
-      count: commissions.length,
-      summary: {
-        totalCommission,
-        totalPayout,
-        totalRevenue: totalCommission + totalPayout
-      },
-      commissions
-    });
-  } catch (error) {
-    console.error('Get commissions error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+  /**
+   * Protocol Analysis: Settlements can only be initiated post-liquidation
+   */
+  if (item.status !== 'closed') {
+    return next(new ErrorResponse('Protocol Violation: Capital settlement is restricted to completed liquidations.', 400));
   }
-};
 
+  /**
+   * Valuation Verification: Locate highest capital proposal
+   */
+  const winningBid = await Bid.findOne({ item: auctionItemId })
+    .sort({ amount: -1 })
+    .populate('user', 'name email');
 
-const getCommissionById = async (req, res) => {
-  try {
-    const commission = await Commission.findById(req.params.id)
-      .populate('auctionItem', 'title')
-      .populate('seller', 'name email')
-      .populate('winner', 'name email');
-
-    if (!commission) {
-      return res.status(404).json({ message: 'Commission not found' });
-    }
-
-
-    if (req.user.role !== 'superadmin' && commission.seller.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to view this commission' });
-    }
-
-    res.status(200).json({
-      success: true,
-      commission
-    });
-  } catch (error) {
-    console.error('Get commission error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+  if (!winningBid) {
+    return next(new ErrorResponse('Registry Failure: No valid capital proposals found for this asset.', 400));
   }
-};
 
-
-const updateCommissionStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
-
-    const commission = await Commission.findById(req.params.id);
-
-    if (!commission) {
-      return res.status(404).json({ message: 'Commission not found' });
-    }
-
-    commission.status = status;
-    if (status === 'paid') {
-      commission.paidAt = new Date();
-    }
-
-    await commission.save();
-
-    const updatedCommission = await Commission.findById(commission._id)
-      .populate('auctionItem', 'title')
-      .populate('seller', 'name email')
-      .populate('winner', 'name email');
-
-    res.status(200).json({
-      success: true,
-      message: 'Commission status updated',
-      commission: updatedCommission
-    });
-  } catch (error) {
-    console.error('Update commission error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+  /**
+   * Redundancy Check: Verify if settlement already exists
+   */
+  const existingCommission = await Commission.findOne({ auctionItem: auctionItemId });
+  if (existingCommission) {
+    return next(new ErrorResponse('Identity Redundancy: Capital settlement already established for this asset.', 400));
   }
-};
 
+  const commission = await Commission.create({
+    auctionItem: auctionItemId,
+    seller: item.createdBy,
+    winner: winningBid.user._id,
+    finalBidAmount: winningBid.amount,
+    commissionRate: commissionRate || 10
+  });
 
-const deleteCommission = async (req, res) => {
-  try {
-    const commission = await Commission.findById(req.params.id);
+  const populatedCommission = await Commission.findById(commission._id)
+    .populate('auctionItem', 'title')
+    .populate('seller', 'name email')
+    .populate('winner', 'name email');
 
-    if (!commission) {
-      return res.status(404).json({ message: 'Commission not found' });
-    }
+  res.status(201).json({
+    success: true,
+    message: 'Capital settlement successfully registered within the institutional registry.',
+    commission: populatedCommission
+  });
+});
 
-    await Commission.findByIdAndDelete(req.params.id);
+/**
+ * @desc    Retrieve capital settlement history with governance filtering
+ * @route   GET /api/commissions
+ * @access  Private (Seller/Superadmin)
+ */
+const getCommissions = asyncHandler(async (req, res, next) => {
+  const { status, seller } = req.query;
+  const query = {};
 
-    res.status(200).json({
-      success: true,
-      message: 'Commission deleted successfully'
-    });
-  } catch (error) {
-    console.error('Delete commission error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+  if (status) query.status = status;
+  if (seller) query.seller = seller;
+
+  /**
+   * Access Pattern: Entities are restricted to their own settlement records
+   */
+  if (req.user.role !== 'superadmin') {
+    query.seller = req.user._id;
   }
-};
+
+  const commissions = await Commission.find(query)
+    .populate('auctionItem', 'title')
+    .populate('seller', 'name email')
+    .populate('winner', 'name email')
+    .sort({ createdAt: -1 });
+
+  const totalCommission = commissions.reduce((sum, c) => sum + c.commissionAmount, 0);
+  const totalPayout = commissions.reduce((sum, c) => sum + c.sellerPayout, 0);
+
+  res.status(200).json({
+    success: true,
+    message: 'Settlement history successfully synchronized.',
+    count: commissions.length,
+    summary: {
+      totalCommission,
+      totalPayout,
+      totalRevenue: totalCommission + totalPayout
+    },
+    commissions
+  });
+});
+
+/**
+ * @desc    Retrieve specific capital settlement intelligence
+ * @route   GET /api/commissions/:id
+ * @access  Private (Seller/Superadmin)
+ */
+const getCommissionById = asyncHandler(async (req, res, next) => {
+  const commission = await Commission.findById(req.params.id)
+    .populate('auctionItem', 'title')
+    .populate('seller', 'name email')
+    .populate('winner', 'name email');
+
+  if (!commission) {
+    return next(new ErrorResponse('Registry Failure: Targeted settlement identifier not found.', 404));
+  }
+
+  /**
+   * Governance Check: Verify entity authorization for record retrieval
+   */
+  if (req.user.role !== 'superadmin' && commission.seller.toString() !== req.user._id.toString()) {
+    return next(new ErrorResponse('Access Denied: Insufficient privileges to view this settlement record.', 403));
+  }
+
+  res.status(200).json({
+    success: true,
+    commission
+  });
+});
+
+/**
+ * @desc    Execute settlement status modification
+ * @route   PUT /api/commissions/:id/status
+ * @access  Private (Superadmin)
+ */
+const updateCommissionStatus = asyncHandler(async (req, res, next) => {
+  const { status } = req.body;
+
+  const commission = await Commission.findById(req.params.id);
+
+  if (!commission) {
+    return next(new ErrorResponse('Registry Failure: Targeted settlement identifier not found.', 404));
+  }
+
+  commission.status = status;
+  if (status === 'paid') {
+    commission.paidAt = new Date();
+  }
+
+  await commission.save();
+
+  const updatedCommission = await Commission.findById(commission._id)
+    .populate('auctionItem', 'title')
+    .populate('seller', 'name email')
+    .populate('winner', 'name email');
+
+  res.status(200).json({
+    success: true,
+    message: 'Settlement status successfully modified and re-syndicated.',
+    commission: updatedCommission
+  });
+});
+
+/**
+ * @desc    Rescind capital settlement (Delete Commission)
+ * @route   DELETE /api/commissions/:id
+ * @access  Private (Superadmin)
+ */
+const deleteCommission = asyncHandler(async (req, res, next) => {
+  const commission = await Commission.findById(req.params.id);
+
+  if (!commission) {
+    return next(new ErrorResponse('Registry Failure: Targeted settlement identifier not found.', 404));
+  }
+
+  await Commission.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    message: 'Capital settlement successfully rescinded and purged from the registry.'
+  });
+});
 
 module.exports = {
   createCommission,
@@ -183,3 +192,4 @@ module.exports = {
   updateCommissionStatus,
   deleteCommission
 };
+

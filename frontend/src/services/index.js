@@ -137,3 +137,45 @@ export const reviewService = {
     return response.data;
   }
 };
+
+export const adminService = {
+  getStats: async () => {
+    const response = await api.get('/superadmin/stats');
+    return response.data;
+  },
+
+  getActivities: async (limit = 20) => {
+    const response = await api.get('/superadmin/activities', { params: { limit } });
+    return response.data;
+  },
+
+  getAllUsers: async (params = {}) => {
+    const response = await api.get('/superadmin/users', { params });
+    return response.data;
+  },
+
+  updateUserRole: async (id, role) => {
+    const response = await api.put(`/superadmin/users/${id}/role`, { role });
+    return response.data;
+  },
+
+  toggleUserStatus: async (id) => {
+    const response = await api.put(`/superadmin/users/${id}/status`);
+    return response.data;
+  },
+
+  deleteUser: async (id) => {
+    const response = await api.delete(`/superadmin/users/${id}`);
+    return response.data;
+  },
+
+  forceDeleteItem: async (id) => {
+    const response = await api.delete(`/superadmin/items/${id}`);
+    return response.data;
+  },
+
+  forceDeleteBid: async (id) => {
+    const response = await api.delete(`/superadmin/bids/${id}`);
+    return response.data;
+  }
+};

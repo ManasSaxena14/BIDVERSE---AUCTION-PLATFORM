@@ -26,6 +26,7 @@ import UserProfile from './pages/UserProfile';
 import EditProfile from './pages/EditProfile';
 import ViewAuctionDetails from './pages/ViewAuctionDetails';
 import ViewMyAuctions from './pages/ViewMyAuctions';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -105,6 +106,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <UpdateBid />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin-dashboard"
+                    element={
+                      <ProtectedRoute roles={['superadmin']}>
+                        <AdminDashboard />
                       </ProtectedRoute>
                     }
                   />

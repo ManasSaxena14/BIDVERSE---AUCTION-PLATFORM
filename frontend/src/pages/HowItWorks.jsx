@@ -1,220 +1,159 @@
+import { 
+  HiOutlineLockClosed, 
+  HiOutlineBolt, 
+  HiOutlineStar, 
+  HiOutlineCreditCard, 
+  HiOutlineDevicePhoneMobile, 
+  HiOutlineShieldCheck,
+  HiOutlineArrowUpRight,
+  HiOutlineQueueList,
+  HiOutlineAcademicCap
+} from 'react-icons/hi2';
+
 const HowItWorks = () => {
   const steps = {
     buyer: [
-      {
-        step: '01',
-        title: 'Create Your Account',
-        description: 'Sign up for free and complete your profile in minutes. Choose to be a bidder or auctioneer.'
-      },
-      {
-        step: '02',
-        title: 'Browse Auctions',
-        description: 'Explore thousands of items across various categories. Use filters to find exactly what you\'re looking for.'
-      },
-      {
-        step: '03',
-        title: 'Place Your Bid',
-        description: 'Found something you like? Place a competitive bid and watch the leaderboard in real-time.'
-      },
-      {
-        step: '04',
-        title: 'Win & Purchase',
-        description: 'If your bid is highest when the auction ends, you win! Complete the secure checkout process.'
-      }
+      { step: '01', title: 'Entity Registration', description: 'Initialize your institutional profile and verify your capital credentials for market entry.' },
+      { step: '02', title: 'Registry Discovery', description: 'Navigate our global database of high-value alternative assets across diverse categories.' },
+      { step: '03', title: 'Capital Allocation', description: 'Deploy competitive proposals with real-time millisecond-accurate synchronization.' },
+      { step: '04', title: 'Acquisition Settlement', description: 'Finalize the secure custodial transfer and authenticated ownership transition.' }
     ],
     seller: [
-      {
-        step: '01',
-        title: 'List Your Item',
-        description: 'Create an auction with photos, description, starting price, and auction duration.'
-      },
-      {
-        step: '02',
-        title: 'Set Your Terms',
-        description: 'Choose your reserve price, auction duration, and shipping options.'
-      },
-      {
-        step: '03',
-        title: 'Manage Bids',
-        description: 'Monitor incoming bids, answer questions, and update your listing as needed.'
-      },
-      {
-        step: '04',
-        title: 'Complete Sale',
-        description: 'When auction ends, finalize the sale and arrange shipping with the winner.'
-      }
+      { step: '01', title: 'Asset Characterization', description: 'Professional listing infrastructure for high-value collectibles and luxury holdings.' },
+      { step: '02', title: 'Strategic Configuration', description: 'Define baseline valuations and protocol deadlines with institutional precision.' },
+      { step: '03', title: 'Market Exposure', description: 'Maximize global liquidity through our high-frequency bidder management network.' },
+      { step: '04', title: 'Governed Settlement', description: 'Automated settlement protocols and secure international logistics coordination.' }
     ]
   };
 
   const faqs = [
-    {
-      question: 'How do I place a bid?',
-      answer: 'Simply navigate to an item page, enter your bid amount (must be higher than current bid), and click "Place Bid". You\'ll receive confirmation immediately.'
-    },
-    {
-      question: 'Can I retract a bid?',
-      answer: 'Bids are binding commitments. However, you can update your bid amount before the auction ends. Contact support for exceptional circumstances.'
-    },
-    {
-      question: 'What fees does BidVerse charge?',
-      answer: 'We charge a 10% commission on successful sales. Bidders don\'t pay any fees. Creating listings is completely free.'
-    },
-    {
-      question: 'How long do auctions last?',
-      answer: 'Auctioneers can set auction duration from 1 day to 30 days. The countdown timer shows exactly when each auction ends.'
-    },
-    {
-      question: 'Is my payment secure?',
-      answer: 'Absolutely! We use industry-standard encryption and secure payment gateways to protect all transactions.'
-    },
-    {
-      question: 'What if I win an auction?',
-      answer: 'Congratulations! You\'ll receive an email with payment instructions and seller contact information to arrange delivery.'
-    }
+    { question: 'Proposal Protocols', answer: 'All capital proposals are binding commitments. Each incremental adjustment must exceed the current high-water mark by the specified protocol minimum.' },
+    { question: 'Security Architecture', answer: 'We utilize defense-grade encryption and secure multi-sig escrow gateways for all high-value institutional transactions.' },
+    { question: 'Premium Commissions', answer: 'Our fee schedules are optimized for high-value asset transfers. Contact our private concierge for customized liquidation terms.' }
   ];
 
   const features = [
-    { icon: '🔒', title: 'Secure Payments', desc: 'Bank-level encryption' },
-    { icon: '⚡', title: 'Instant Notifications', desc: 'Real-time bid alerts' },
-    { icon: '🌟', title: 'Verified Sellers', desc: 'Trusted community' },
-    { icon: '💳', title: 'Multiple Payment Methods', desc: 'Pay your way' },
-    { icon: '📱', title: 'Mobile Friendly', desc: 'Bid on the go' },
-    { icon: '🛡️', title: 'Buyer Protection', desc: 'Money-back guarantee' }
+    { icon: HiOutlineLockClosed, title: 'Secure Vault', desc: 'MIL-SPEC ENCRYPTION' },
+    { icon: HiOutlineBolt, title: 'Zero Latency', desc: 'REAL-TIME SYNC' },
+    { icon: HiOutlineStar, title: 'Elite Sourcing', desc: 'VERIFIED PROVENANCE' },
+    { icon: HiOutlineCreditCard, title: 'Settlement', desc: 'CUSTODIAL ESCROW' },
+    { icon: HiOutlineDevicePhoneMobile, title: 'Mobility', desc: 'GLOBAL TERMINAL' },
+    { icon: HiOutlineShieldCheck, title: 'Compliance', desc: 'GOVERNED TRANSFERS' }
   ];
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
-      <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#1A1A1A] to-black text-[#F7F7F7] py-24 overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(212,175,55,0.15) 1px, transparent 0)` ,
-            backgroundSize: '40px 40px'
-          }}></div>
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D0D0D]"></div>
+      <header className="relative py-64 bg-[#0D0D0D] border-b border-white/5 overflow-hidden">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#D4AF37]/5 blur-[200px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-white/5 blur-[180px] pointer-events-none" />
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-block px-6 py-3 bg-white/5 backdrop-blur-xl border border-[#D4AF37]/30 rounded-full text-[#D4AF37] text-sm font-bold tracking-wider mb-6">
-            HOW IT WORKS
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 text-center relative z-10 space-y-12 animate-fadeInUp">
+          <div className="inline-flex items-center gap-4 px-8 py-3 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-full text-white/40 text-[10px] font-black tracking-[0.5em] mb-4 uppercase italic leading-none">
+            <HiOutlineAcademicCap className="text-[#D4AF37] text-sm" />
+            Protocol Operational Framework
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
-            Master the Art of <span className="text-[#D4AF37]">Luxury Bidding</span>
+          <h1 className="text-7xl md:text-[10rem] font-black text-white tracking-tighter uppercase leading-[0.8] italic">
+            Institutional <span className="gold-shimmer-text not-italic">Standards</span>
           </h1>
-          <p className="text-xl md:text-2xl text-[#E5E4E2] max-w-3xl mx-auto font-light tracking-wide">
-            Your complete guide to buying and selling exclusive items on BidVerse
+          <p className="text-[12px] md:text-[14px] text-white/20 max-w-2xl mx-auto font-black tracking-[0.4em] uppercase leading-relaxed italic">
+            Your comprehensive framework for acquiring and liquidating high-value assets on the premier global marketplace.
           </p>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#F7F7F7] mb-4 tracking-wide">For Buyers</h2>
-          <p className="text-xl text-[#E5E4E2] max-w-2xl mx-auto font-light tracking-wide">Discover and win rare treasures in 4 easy steps</p>
+      <section className="max-w-7xl mx-auto px-4 lg:px-8 py-48 animate-fadeInUp delay-200">
+        <div className="mb-32 space-y-4">
+          <h2 className="text-[11px] font-black uppercase tracking-[0.6em] text-[#D4AF37] italic">Acquisition</h2>
+          <h3 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter italic leading-none">THE BUYER <span className="gold-shimmer-text">LIFECYCLE</span></h3>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
           {steps.buyer.map((step, index) => (
-            <div key={index} className="relative">
-              <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl p-8 shadow-2xl hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all duration-500 hover:-translate-y-2 group">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#B8860B] rounded-full flex items-center justify-center text-[#0D0D0D] font-bold text-2xl mb-6 shadow-lg group-hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all duration-300">
-                  {step.step}
-                </div>
-                <div className="text-sm font-bold text-[#D4AF37] mb-4 tracking-wider">STEP {step.step}</div>
-                <h3 className="text-2xl font-bold text-[#F7F7F7] mb-4 tracking-wide">{step.title}</h3>
-                <p className="text-[#E5E4E2] font-light">{step.description}</p>
-              </div>
-              {index < steps.buyer.length - 1 && (
-                <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                  <svg className="w-8 h-8 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              )}
+            <div key={index} className="bg-white/5 p-12 rounded-[4rem] border border-white/5 hover:border-[#D4AF37]/40 transition-all duration-1000 group shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+              <div className="text-6xl font-black text-[#D4AF37]/10 mb-10 group-hover:text-[#D4AF37] transition-colors leading-none italic">{step.step}</div>
+              <h3 className="text-xl font-black text-white mb-6 uppercase tracking-tight italic group-hover:gold-shimmer-text transition-all">{step.title}</h3>
+              <p className="text-[10px] text-white/20 font-black tracking-widest leading-loose uppercase italic">{step.description}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="py-20 bg-gradient-to-b from-[#0D0D0D] to-[#1A1A1A]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#F7F7F7] mb-4 tracking-wide">For Sellers</h2>
-            <p className="text-xl text-[#E5E4E2] max-w-2xl mx-auto font-light tracking-wide">Turn your exclusive items into profitable auctions</p>
+      <section className="bg-black/60 backdrop-blur-3xl py-48 border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+          <div className="mb-32 space-y-4">
+            <h2 className="text-[11px] font-black uppercase tracking-[0.6em] text-[#D4AF37] italic">Liquidation</h2>
+            <h3 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter italic leading-none">VENDORS <span className="gold-shimmer-text">PROTOCOL</span></h3>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
             {steps.seller.map((step, index) => (
-              <div key={index} className="relative">
-                <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl p-8 shadow-2xl hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all duration-500 hover:-translate-y-2 group">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#B8860B] rounded-full flex items-center justify-center text-[#0D0D0D] font-bold text-2xl mb-6 shadow-lg group-hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all duration-300">
-                    {step.step}
-                  </div>
-                  <div className="text-sm font-bold text-[#D4AF37] mb-4 tracking-wider">STEP {step.step}</div>
-                  <h3 className="text-2xl font-bold text-[#F7F7F7] mb-4 tracking-wide">{step.title}</h3>
-                  <p className="text-[#E5E4E2] font-light">{step.description}</p>
-                </div>
-                {index < steps.seller.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                    <svg className="w-8 h-8 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                )}
+              <div key={index} className="bg-white/5 p-12 rounded-[4rem] border border-white/5 hover:border-white/10 transition-all duration-1000 group shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                <div className="text-6xl font-black text-white/5 mb-10 group-hover:text-[#D4AF37] transition-colors leading-none italic">{step.step}</div>
+                <h3 className="text-xl font-black text-white mb-6 uppercase tracking-tight italic group-hover:text-white transition-all">{step.title}</h3>
+                <p className="text-[10px] text-white/20 font-black tracking-widest leading-loose uppercase italic">{step.description}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-3xl sm:text-4xl font-bold text-center text-[#F7F7F7] mb-16 tracking-wide">
-          Platform Features
-        </h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <div key={index} className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 p-8 rounded-2xl shadow-2xl hover:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all duration-500 group hover:-translate-y-1">
-              <div className="text-4xl mb-6 text-[#D4AF37] group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
-              <h3 className="text-2xl font-bold text-[#F7F7F7] mb-4 tracking-wide">{feature.title}</h3>
-              <p className="text-[#E5E4E2] font-light">{feature.desc}</p>
+      <section className="max-w-7xl mx-auto px-4 lg:px-8 py-48">
+        <div className="mb-32 text-center space-y-4 animate-fadeInUp delay-300">
+          <h2 className="text-[11px] font-black uppercase tracking-[0.6em] text-[#D4AF37] italic">Capabilities</h2>
+          <h3 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter italic leading-none">PLATFORM <span className="gold-shimmer-text">EDGE</span></h3>
+        </div>
+        <div className="grid md:grid-cols-3 gap-12 animate-fadeInUp delay-400">
+          {features.map((f, i) => (
+            <div key={i} className="bg-white/5 p-16 rounded-[4rem] border border-white/5 hover:border-[#D4AF37]/40 transition-all duration-1000 shadow-[0_30px_100px_rgba(0,0,0,0.5)] group text-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-[#D4AF37]/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+              <f.icon className="text-6xl mx-auto mb-10 text-[#D4AF37] group-hover:scale-110 transition-transform duration-1000" />
+              <h3 className="text-2xl font-black text-white mb-6 uppercase tracking-tight italic group-hover:gold-shimmer-text transition-all">{f.title}</h3>
+              <p className="text-[11px] text-white/10 font-black uppercase tracking-[0.6em] leading-none italic">{f.desc}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="py-20 bg-gradient-to-b from-[#1A1A1A] to-[#0D0D0D]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center text-[#F7F7F7] mb-16 tracking-wide">
-            Frequently Asked Questions
-          </h2>
+      <section className="bg-white/5 py-48 border-t border-white/5">
+        <div className="max-w-4xl mx-auto px-4 lg:px-8">
+          <div className="mb-32 text-center space-y-4">
+            <h2 className="text-[11px] font-black uppercase tracking-[0.6em] text-[#D4AF37] italic">Intelligence</h2>
+            <h3 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter italic leading-none">GOVERNANCE <span className="gold-shimmer-text">REGISTRY</span></h3>
+          </div>
           <div className="space-y-6">
-            {faqs.map((faq, index) => (
-              <details key={index} className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-xl overflow-hidden group transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.1)]">
-                <summary className="px-8 py-6 cursor-pointer font-bold text-xl text-[#F7F7F7] hover:bg-white/5 flex justify-between items-center tracking-wide transition-colors duration-300">
+            {faqs.map((faq, i) => (
+              <details key={i} className="bg-black/40 border border-white/5 rounded-[3rem] overflow-hidden group">
+                <summary className="px-12 py-10 cursor-pointer font-black text-white/40 hover:text-white transition-all duration-1000 flex justify-between items-center text-[11px] uppercase tracking-[0.5em] italic leading-none list-none">
                   {faq.question}
-                  <svg className="w-6 h-6 text-[#D4AF37] transform group-open:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <div className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center text-[#D4AF37] group-hover:border-[#D4AF37]/50 group-hover:rotate-45 transition-all">+</div>
                 </summary>
-                <div className="px-8 py-6 bg-gradient-to-r from-[#0D0D0D] to-[#1A1A1A] text-[#E5E4E2] border-t border-[#D4AF37]/20 font-light">
+                <div className="px-12 py-12 bg-white/5 text-white/20 text-[12px] font-black uppercase tracking-[0.3em] leading-loose italic border-t border-white/5">
                   {faq.answer}
                 </div>
               </details>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#F7F7F7] mb-6 tracking-wide">
-          Ready to Experience <span className="text-[#D4AF37]">Luxury Auctions</span>?
-        </h2>
-        <p className="text-xl text-[#E5E4E2] mb-10 max-w-2xl mx-auto font-light tracking-wide">
-          Join BidVerse today and discover rare treasures from collectors worldwide
-        </p>
-        <a href="/signup" className="inline-block px-10 py-5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] rounded-full font-bold text-lg tracking-wider hover:from-[#B8860B] hover:to-[#D4AF37] transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] transform hover:scale-105">
-          Create Your Exclusive Account
-        </a>
-      </div>
+      <footer className="bg-black py-72 border-t border-[#D4AF37]/20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[#D4AF37]/10 blur-[200px] pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 text-center space-y-16 relative z-10">
+          <h2 className="text-7xl md:text-[10rem] font-black text-white mb-8 tracking-tighter uppercase leading-[0.8] italic">
+            INITIALIZE <span className="gold-shimmer-text not-italic">LEGACY</span>
+          </h2>
+          <p className="text-[12px] md:text-[14px] text-white/20 max-w-xl mx-auto font-black tracking-[0.6em] uppercase italic leading-loose">
+            Join the most prestigious global auction community today.
+          </p>
+          <a href="/signup" className="inline-block px-20 py-8 bg-[#D4AF37] text-[#0D0D0D] rounded-3xl font-black text-[12px] tracking-[0.6em] uppercase hover:bg-white transition-all shadow-[0_0_80px_rgba(212,175,55,0.4)] italic leading-none flex items-center gap-6 mx-auto group">
+            ESTABLISH CREDENTIALS <HiOutlineArrowUpRight className="group-hover:translate-x-3 group-hover:-translate-y-3 transition-transform" />
+          </a>
+        </div>
+      </footer>
     </div>
   );
 };
 
 export default HowItWorks;
+
+

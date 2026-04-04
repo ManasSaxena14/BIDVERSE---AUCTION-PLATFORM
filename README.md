@@ -94,14 +94,93 @@ To get started with admin privileges, insert a document into your `users` collec
 
 ---
 
-## API Documentation (Quick View)
+---
+
+## Architecture & Design (Backend)
+
+The backend is built using a **Modular MVC (Model-View-Controller)** pattern for maximum separation of concerns:
+
+1.  **Models (`/models`)**: Definitive schemas for Users, Items, Bids, and Commissions using Mongoose.
+2.  **Controllers (`/controllers`)**: Isolated business logic. This ensures that route handlers remain lean and testable.
+3.  **Routes (`/routes`)**: Clean mapping of URL endpoints to controller functions, wrapped in robust middleware.
+4.  **Middleware (`/middleware`)**: Centralized logic for Authentication, RBAC (Role-Based Access Control), and Error Handling.
+
+---
+
+## Logical Constraints & Business Rules
+
+BIDVERSE implements rigorous server-side logic to maintain platform integrity:
+
+-   **Bidding Guardrails**:
+    -   Users cannot bid on their own auctions.
+    -   Bids must be strictly higher than the current highest bid.
+    -   Active auctions only: No bidding once the `endDate` has passed.
+-   **User Status**:
+    -   Admins can toggle a user status between `active` and `inactive`.
+    -   `inactive` users are instantly barred from logging in or performing any platform actions.
+-   **Financial Integrity**:
+    -   Successful auctions automatically generate a `Commission` record.
+    -   Platform revenue is calculated as a fixed percentage of the closing price.
+
+---
+
+## Data Modeling
+
+-   **User**: Handles auth, roles (`bidder`, `auctioneer`, `superadmin`), and suspension status.
+-   **AuctionItem**: Reference-linked to `User` (creator). It tracks `currentBid` and `status` (`active`, `closed`).
+-   **Bid**: Many-to-one relationship with both `User` and `AuctionItem`.
+-   **Commission**: Generated upon auction closure to track platform earnings and seller payouts.
+
+---
+
+## Reliability & Validation
+
+-   **Strict Input Validation**: Every endpoint validates required fields and data types before processing.
+-   **HTTP Status Codes**:
+    -   `200/201`: Success / Resource Created
+    -   `400`: Client Error (Invalid input / Business logic violation)
+    -   `401/403`: Unauthorized / Forbidden (Role mismatch)
+    -   `404`: Resource not found
+-   **Error Responses**: Consistent JSON error objects with descriptive `message` fields for frontend consumption.
+
+---
+
+## Assumptions & Tradeoffs
+
+-   **Stateless Auth**: We chose JWT over Sessions for scalability, allowing the backend to remain stateless.
+-   **Real-time Simulation**: For this version, we use polling/re-fetching rather than WebSockets to reduce server overhead while maintaining high data consistency.
+-   **Admin Creation**: For security, Superadmins cannot be created via the public signup endpoint; they must be promoted by an existing Admin or via DB access.
+
+---
+
+## API Documentation (Expanded)
+
+### Auth Endpoints
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | POST | `/api/auth/signup` | Register new user | Public |
-| POST | `/api/auth/login` | Obtain JWT token | Public |
-| GET | `/api/items` | List all auction items | Public |
-| POST | `/api/items` | Create new auction item | Private (Seller) |
-| POST | `/api/bids/:itemId` | Place a bid | Private (Bidder) |
+| POST | `/api/auth/login` | Login & get JWT | Public |
+| GET | `/api/auth/me` | Get current profile | Private |
+
+### Auction Endpoints
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/items` | List & search items | Public |
+| POST | `/api/items` | Create new auction | Seller/Admin |
+| PUT | `/api/items/:id` | Update item | Owner/Admin |
+
+### Bid Endpoints
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/bids` | Place/Update a bid | Bidder/Admin |
+| GET | `/api/items/:id/bids` | View item bids | Public |
+
+### Admin Endpoints (Superadmin Only)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| GET | `/api/superadmin/stats` | Platform analytics & trends |
+| GET | `/api/superadmin/users` | Manage all users |
+| PUT | `/api/superadmin/users/:id/status` | Suspend/Activate user |
 
 ---
 

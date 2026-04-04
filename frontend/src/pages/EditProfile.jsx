@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
+import { 
+  HiOutlineUser, 
+  HiOutlineEnvelope, 
+  HiOutlineCheckCircle, 
+  HiOutlineXMark,
+  HiOutlineIdentification
+} from 'react-icons/hi2';
 
 const EditProfile = () => {
   const { user, updateProfile } = useAuth();
@@ -34,38 +41,48 @@ const EditProfile = () => {
 
     try {
       await updateProfile(formData);
-      addToast('Profile updated successfully!', 'success');
+      addToast('Identity parameters synchronized.', 'success');
       navigate('/profile');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update profile');
-      addToast(err.response?.data?.message || 'Failed to update profile', 'error');
+      const msg = err.response?.data?.message || 'Failed to synchronize identity.';
+      setError(msg);
+      addToast(msg, 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] py-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0D0D0D] py-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <div className="inline-block px-6 py-3 bg-white/5 backdrop-blur-xl border border-[#D4AF37]/30 rounded-full text-[#D4AF37] text-sm font-bold tracking-wider mb-6">
-            EDIT PROFILE
+        
+        <header className="mb-16 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-full text-[#D4AF37] text-[10px] font-black tracking-[0.3em] uppercase mb-8">
+            <HiOutlineIdentification className="text-sm" />
+            Identity Management Protocol
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-[#F7F7F7] tracking-wide mb-4">Update Your Information</h1>
-          <p className="text-xl text-[#E5E4E2] max-w-2xl mx-auto font-light">Modify your personal details below</p>
-        </div>
+          <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-6">
+            Refine <span className="text-[#D4AF37]">Identity</span>
+          </h1>
+          <p className="max-w-xl mx-auto text-white/40 text-xs font-black tracking-widest uppercase leading-loose">
+            Maintain accurate credentials for secure portfolio interactions.
+          </p>
+        </header>
 
-        <div className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-8">
+        <section className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 blur-[100px] pointer-events-none" />
+          
           {error && (
-            <div className="bg-red-900/50 border border-red-700/50 text-red-200 px-6 py-4 rounded-xl mb-8 text-center font-medium tracking-wide">
+            <div className="mb-10 p-5 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4 text-red-500 text-[10px] font-black tracking-widest uppercase text-center">
+              <HiOutlineXMark className="text-lg" />
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div>
-              <label className="block text-lg font-bold text-[#F7F7F7] mb-3 tracking-wide">
-                FULL NAME *
+          <form onSubmit={handleSubmit} className="space-y-10">
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
+                <HiOutlineUser /> Full Nomenclature
               </label>
               <input
                 type="text"
@@ -73,14 +90,14 @@ const EditProfile = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-6 py-4 bg-[#0D0D0D] border-2 border-[#D4AF37]/30 rounded-xl text-[#F7F7F7] text-lg focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 transition-all duration-300 placeholder-[#E5E4E2]/50"
-                placeholder="Enter your full name"
+                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
+                placeholder="Enter registered name"
               />
             </div>
 
-            <div>
-              <label className="block text-lg font-bold text-[#F7F7F7] mb-3 tracking-wide">
-                EMAIL ADDRESS *
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
+                <HiOutlineEnvelope /> Secure Email Address
               </label>
               <input
                 type="email"
@@ -88,32 +105,38 @@ const EditProfile = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-6 py-4 bg-[#0D0D0D] border-2 border-[#D4AF37]/30 rounded-xl text-[#F7F7F7] text-lg focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 transition-all duration-300 placeholder-[#E5E4E2]/50"
-                placeholder="Enter your email address"
+                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
+                placeholder="Enter verified email"
               />
             </div>
 
-            <div className="flex flex-wrap gap-6 pt-8">
+            <div className="flex flex-col sm:flex-row gap-6 pt-6">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 min-w-[200px] px-8 py-5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] rounded-xl font-bold text-lg tracking-wider hover:from-[#B8860B] hover:to-[#D4AF37] transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-10 py-5 bg-[#D4AF37] text-[#0D0D0D] rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:bg-white transition-all flex items-center justify-center gap-3 shadow-2xl disabled:opacity-50"
               >
-                {loading ? 'UPDATING PROFILE...' : 'UPDATE PROFILE'}
+                {loading ? 'Processing...' : (
+                  <>
+                    <HiOutlineCheckCircle className="text-lg" />
+                    Synchronize Profile
+                  </>
+                )}
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/profile')}
-                className="flex-1 min-w-[200px] px-8 py-5 bg-[#1A1A1A] backdrop-blur-xl border-2 border-[#D4AF37] text-[#D4AF37] rounded-xl font-bold text-lg tracking-wider hover:bg-[#D4AF37] hover:text-[#0D0D0D] transition-all duration-300"
+                className="px-10 py-5 bg-white/5 border border-white/10 text-white/40 rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all flex items-center justify-center"
               >
-                CANCEL
+                Cancel Protocol
               </button>
             </div>
           </form>
-        </div>
+        </section>
       </div>
     </div>
   );
 };
+
 
 export default EditProfile;

@@ -8,15 +8,19 @@ const {
 } = require('../controllers/bidController');
 const { protect } = require('../middleware/auth');
 const { authorize, authorizeOwnerOrAdmin } = require('../middleware/authorization');
+const { bidValidation } = require('../middleware/validator');
 const Bid = require('../models/Bid');
 
 const router = express.Router();
 
-
+/**
+ * Restricted Capital Proposal (Bid) Routes
+ */
 router.post(
   '/',
   protect,
   authorize('bidder', 'superadmin'),
+  bidValidation.place,
   createBid
 );
 
@@ -38,3 +42,4 @@ router.delete(
 );
 
 module.exports = router;
+

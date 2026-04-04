@@ -1,173 +1,164 @@
 import { Link } from 'react-router-dom';
+import { 
+  HiOutlineCpuChip, 
+  HiOutlinePaintBrush, 
+  HiOutlineTrophy, 
+  HiOutlineSparkles, 
+  HiOutlineLibrary, 
+  HiOutlineShoppingBag, 
+  HiOutlineTruck, 
+  HiOutlineHome,
+  HiOutlineArrowRight
+} from 'react-icons/hi2';
 
 const Categories = () => {
   const categories = [
     {
       name: 'Electronics',
-      icon: '💻',
-      description: 'Latest gadgets, smartphones, laptops, and tech accessories',
-      gradient: 'from-blue-600 to-cyan-600',
-      bgGradient: 'from-blue-50 to-cyan-50'
+      icon: HiOutlineCpuChip,
+      description: 'High-performance computing, advanced mobile architecture, and professional hardware.',
+      theme: 'text-blue-400'
     },
     {
       name: 'Art',
-      icon: '🎨',
-      description: 'Original paintings, sculptures, and fine art pieces',
-      gradient: 'from-purple-600 to-pink-600',
-      bgGradient: 'from-purple-50 to-pink-50'
+      icon: HiOutlinePaintBrush,
+      description: 'Masterwork canvases, structural sculptures, and significant fine art acquisitions.',
+      theme: 'text-purple-400'
     },
     {
       name: 'Collectibles',
-      icon: '🏆',
-      description: 'Rare coins, stamps, memorabilia, and vintage items',
-      gradient: 'from-orange-600 to-red-600',
-      bgGradient: 'from-orange-50 to-red-50'
+      icon: HiOutlineTrophy,
+      description: 'Numismatic rarities, historical philately, and high-value cultural artifacts.',
+      theme: 'text-orange-400'
     },
     {
       name: 'Jewelry',
-      icon: '💎',
-      description: 'Fine jewelry, luxury watches, and precious gemstones',
-      gradient: 'from-emerald-600 to-teal-600',
-      bgGradient: 'from-emerald-50 to-teal-50'
+      icon: HiOutlineSparkles,
+      description: 'Investment-grade gemstones, haute horlogerie, and precious metal compositions.',
+      theme: 'text-emerald-400'
     },
     {
       name: 'Antiques',
-      icon: '🏺',
-      description: 'Vintage furniture, historical artifacts, and curios',
-      gradient: 'from-amber-600 to-yellow-600',
-      bgGradient: 'from-amber-50 to-yellow-50'
+      icon: HiOutlineLibrary,
+      description: 'Period-accurate furnishings, significant historical curiosities, and rare archives.',
+      theme: 'text-amber-400'
     },
     {
       name: 'Fashion',
-      icon: '👗',
-      description: 'Designer clothing, luxury bags, and fashion accessories',
-      gradient: 'from-rose-600 to-pink-600',
-      bgGradient: 'from-rose-50 to-pink-50'
+      icon: HiOutlineShoppingBag,
+      description: 'Couture textiles, bespoke leather assets, and exclusive designer inventory.',
+      theme: 'text-rose-400'
     },
     {
       name: 'Automotive',
-      icon: '🚗',
-      description: 'Luxury cars, classic vehicles, and premium automotive collectibles',
-      gradient: 'from-gray-600 to-blue-600',
-      bgGradient: 'from-gray-50 to-blue-50'
+      icon: HiOutlineTruck,
+      description: 'Precision-engineered vehicles, classic marques, and premium mobility assets.',
+      theme: 'text-gray-400'
     },
     {
       name: 'Real Estate',
-      icon: '🏠',
-      description: 'Premium properties, luxury estates, and exclusive real estate opportunities',
-      gradient: 'from-green-600 to-emerald-600',
-      bgGradient: 'from-green-50 to-emerald-50'
+      icon: HiOutlineHome,
+      description: 'High-density commercial assets, luxury residential estates, and strategic land holdings.',
+      theme: 'text-green-400'
     }
   ];
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
-      
-      <div className="relative bg-gradient-to-br from-[#0D0D0D] via-[#1A1A1A] to-black overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(212,175,55,0.15) 1px, transparent 0)`,
-            backgroundSize: '50px 50px'
-          }}></div>
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D0D0D]"></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
-          <div className="inline-block px-6 py-3 bg-white/5 backdrop-blur-xl border border-[#D4AF37]/30 rounded-full text-[#D4AF37] text-sm font-bold tracking-wider mb-6">
-            EXPLORE COLLECTIONS
+      <header className="relative border-b border-white/5 py-40 bg-[#0A0A0A] overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#D4AF37]/5 blur-[150px] pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 text-center space-y-10 relative z-10">
+          <div className="inline-flex items-center gap-3 px-5 py-2 bg-white/5 border border-white/10 rounded-full text-white/40 text-[9px] font-black tracking-[0.4em] uppercase">
+            Asset Exploration Protocol
           </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold text-[#F7F7F7] mb-6 tracking-wide">
-            BROWSE BY CATEGORY
-          </h1>
-          <p className="text-xl md:text-2xl text-[#E5E4E2]/80 max-w-3xl mx-auto leading-relaxed tracking-wide">
-            Discover curated collections of premium items across all categories
-          </p>
+          <div className="space-y-6">
+            <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter uppercase leading-none italic">
+              Asset <span className="text-[#D4AF37] not-italic">Classification</span>
+            </h1>
+            <p className="text-[11px] text-white/20 max-w-xl mx-auto font-black tracking-[0.3em] uppercase leading-relaxed">
+              Systematic categorization of high-valuation inventory across the global trade network.
+            </p>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {categories.map((category, index) => (
-            <Link
-              key={index}
-              to={`/category/${category.name}`}
-              className="group relative bg-white/5 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.6)] hover:shadow-[0_20px_40px_rgba(212,175,55,0.3)] transition-all duration-300 overflow-hidden hover:-translate-y-2 border border-[#D4AF37]/20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] opacity-100 group-hover:opacity-70 transition-opacity duration-300"></div>
-              
-              <div className="relative p-10">
-                <div className="mb-6">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#E5E4E2] shadow-xl transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                    <span className="text-5xl text-[#0D0D0D]">{category.icon}</span>
+      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-32">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+          {categories.map((category, index) => {
+            const Icon = category.icon;
+            return (
+              <Link
+                key={index}
+                to={`/category/${category.name}`}
+                className="group relative bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/5 hover:border-[#D4AF37]/30 transition-all duration-700 overflow-hidden shadow-2xl"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-[60px] pointer-events-none" />
+                <div className="relative p-12 space-y-8">
+                  <div className="flex justify-between items-start">
+                    <div className="w-20 h-20 rounded-2xl bg-black border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-700 shadow-2xl relative overflow-hidden">
+                       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20" />
+                       <Icon className={`text-4xl ${category.theme} relative z-10`} />
+                    </div>
+                    <HiOutlineArrowRight className="text-white/10 text-xl group-hover:text-[#D4AF37] group-hover:translate-x-2 transition-all duration-700" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tighter group-hover:text-[#D4AF37] transition-colors italic leading-none">
+                      {category.name}
+                    </h3>
+                    <p className="text-[10px] font-black text-white/20 tracking-[0.2em] uppercase leading-relaxed">
+                      {category.description}
+                    </p>
                   </div>
                 </div>
+              </Link>
+            );
+          })}
+        </div>
+      </main>
 
-                <h3 className="text-3xl font-bold text-[#F7F7F7] mb-3 group-hover:text-[#D4AF37] transition-colors tracking-wide">
-                  {category.name}
-                </h3>
-
-                <p className="text-[#E5E4E2]/70 mb-6 leading-relaxed">
-                  {category.description}
-                </p>
-
-                <div className="flex items-center justify-end">
-                  <svg className="w-6 h-6 text-[#D4AF37] group-hover:translate-x-2 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </div>
+      <section className="bg-white/5 border-y border-white/5 py-32 overflow-hidden relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#D4AF37]/5 blur-[180px] pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10">
+          <div className="text-center mb-24 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic">Network Intelligence Metrics</h2>
+            <div className="w-20 h-[1px] bg-[#D4AF37] mx-auto opacity-40 shadow-[0_0_10px_#D4AF37]" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            {[
+              { val: '12K+', label: 'Global Inventory' },
+              { val: '50K+', label: 'Verified Entities' },
+              { val: '$50M+', label: 'Settlement Volume' },
+              { val: '4.9/5', label: 'Consensus Rating' }
+            ].map((stat, i) => (
+              <div key={i} className="text-center space-y-4">
+                <div className="text-5xl font-black text-[#D4AF37] tracking-tighter italic gold-shimmer-text">{stat.val}</div>
+                <div className="text-[9px] text-white/20 tracking-[0.4em] uppercase font-black">{stat.label}</div>
               </div>
-
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-bl-full transform translate-x-16 -translate-y-16 group-hover:translate-x-12 group-hover:-translate-y-12 transition-transform duration-300"></div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-[#0D0D0D] via-[#1A1A1A] to-black py-20 border-y border-[#D4AF37]/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-[#F7F7F7] mb-4 tracking-wide">PLATFORM STATISTICS</h2>
-            <p className="text-xl text-[#E5E4E2]/70 tracking-wide">Trusted by collectors worldwide</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-5xl font-extrabold text-[#D4AF37] mb-2">12K+</div>
-              <div className="text-[#E5E4E2]/60 tracking-wider uppercase">Total Items</div>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-extrabold text-[#D4AF37] mb-2">50K+</div>
-              <div className="text-[#E5E4E2]/60 tracking-wider uppercase">Active Users</div>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-extrabold text-[#D4AF37] mb-2">$50M+</div>
-              <div className="text-[#E5E4E2]/60 tracking-wider uppercase">Total Sales</div>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-extrabold text-[#D4AF37] mb-2">4.9/5</div>
-              <div className="text-[#E5E4E2]/60 tracking-wider uppercase">User Rating</div>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="py-24 bg-gradient-to-br from-[#1A1A1A] to-black border-y border-[#D4AF37]/20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-[#F7F7F7] mb-6 tracking-wide">
-            READY TO START BIDDING?
-          </h2>
-          <p className="text-xl text-[#E5E4E2]/70 mb-10 leading-relaxed tracking-wide">
-            Join BidVerse today and discover extraordinary items in your favorite categories
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/signup" className="px-10 py-4 bg-[#D4AF37] text-[#0D0D0D] rounded-xl font-bold text-lg hover:bg-[#E5E4E2] transform hover:scale-105 transition-all duration-300 shadow-[0_8px_30px_rgba(212,175,55,0.4)] tracking-wide">
-              CREATE FREE ACCOUNT
+      <section className="py-40 bg-black border-b border-white/5">
+        <div className="max-w-4xl mx-auto px-4 lg:px-8 text-center space-y-12">
+          <div className="space-y-6">
+            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter uppercase leading-none italic">
+              Initialize <span className="text-[#D4AF37] not-italic">Acquisition</span> Protocol
+            </h2>
+            <p className="text-[11px] text-white/40 font-black tracking-[0.3em] uppercase leading-relaxed max-w-2xl mx-auto">
+              Join the institutional network today and authorize secondary market access across all classified asset pools.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-8 justify-center pt-8">
+            <Link to="/signup" className="px-12 py-5 bg-[#D4AF37] text-[#0D0D0D] rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:bg-white transition-all shadow-2xl leading-none">
+              Initialize Identity
             </Link>
-            <Link to="/" className="px-10 py-4 bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] rounded-xl font-bold text-lg hover:bg-[#D4AF37] hover:text-[#0D0D0D] transform hover:scale-105 transition-all duration-300 tracking-wide">
-              BROWSE ALL AUCTIONS
+            <Link to="/" className="px-12 py-5 bg-white/5 border border-white/10 text-white/40 rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:text-white transition-all leading-none">
+              Explore Active Pools
             </Link>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

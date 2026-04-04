@@ -1,33 +1,61 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
-
 
 dotenv.config();
 
-
+/**
+ * Initialize core infrastructure
+ */
 connectDB();
 
 const app = express();
 
+/**
+ * Security Protocols
+ */
+app.use(helmet()); 
 
+/**
+ * Standard Rate Limiting
+ */
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
+  message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+app.use('/api/', limiter);
+
+/**
+ * Strict Rate Limiting (Authentication & Bidding)
+ */
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30, 
+  message: 'Exceeded request limit for sensitive operations.'
+});
+app.use('/api/auth/login', strictLimiter);
+app.use('/api/auth/signup', strictLimiter);
+app.use('/api/bids', strictLimiter);
+
+/**
+ * Cross-Origin Resource Sharing (CORS) Configuration
+ */
 const corsOptions = {
   origin: function (origin, callback) {
-
     if (!origin) return callback(null, true);
     
-    const allowedOrigins = [
-      'https://bidverse-auction-platform.vercel.app',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:5173'
-    ];
+    const allowedOrigins = process.env.ALLOWED_ORIGINS 
+      ? process.env.ALLOWED_ORIGINS.split(',') 
+      : ['http://localhost:3000'];
     
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('CORS violation: Access Denied'));
     }
   },
   credentials: true,
@@ -38,6 +66,11 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const errorHandler = require('./middleware/errorMiddleware');
+
+/**
+ * Global Routing Table
+ */
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/items', require('./routes/itemRoutes'));
 app.use('/api/bids', require('./routes/bidRoutes'));
@@ -48,47 +81,26 @@ app.use('/api/reviews', require('./routes/reviewRoutes'));
 
 app.get('/', (req, res) => {
   res.json({
-    message: '🎉 Auction Platform API',
+    message: 'BidVerse Institutional API',
     version: '1.0.0',
-    endpoints: {
-      auth: {
-        signup: 'POST /api/auth/signup',
-        login: 'POST /api/auth/login',
-        getMe: 'GET /api/auth/me'
-      },
-      items: {
-        getAll: 'GET /api/items',
-        getById: 'GET /api/items/:id',
-        create: 'POST /api/items',
-        update: 'PUT /api/items/:id',
-        delete: 'DELETE /api/items/:id'
-      },
-      bids: {
-        getAll: 'GET /api/bids',
-        getById: 'GET /api/bids/:id',
-        create: 'POST /api/bids',
-        update: 'PUT /api/bids/:id',
-        delete: 'DELETE /api/bids/:id'
-      }
-    }
+    status: 'Operational'
   });
 });
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
+/**
+ * Final Middleware Layer (Error Handling & 404)
+ */
+app.use(errorHandler);
 
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+  res.status(404).json({ 
+    success: false,
+    message: 'Resource link terminated: Route not found' 
+  });
 });
 
 const PORT = process.env.PORT || 6001;
-
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`[TERMINAL] System active on port ${PORT}`);
+  console.log(`[STATUS] Environment: ${process.env.NODE_ENV || 'development'}`);
 });

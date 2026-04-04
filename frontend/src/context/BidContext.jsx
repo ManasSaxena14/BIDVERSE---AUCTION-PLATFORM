@@ -38,7 +38,15 @@ export const BidProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       const response = await bidService.createBid(bidData);
-      setBids([response.bid, ...bids]);
+      setBids(prevBids => {
+        const existingIndex = prevBids.findIndex(b => b._id === response.bid._id);
+        if (existingIndex >= 0) {
+          const newBids = [...prevBids];
+          newBids[existingIndex] = response.bid;
+          return newBids;
+        }
+        return [response.bid, ...prevBids];
+      });
       return response;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to place bid');

@@ -1,15 +1,19 @@
 const mongoose = require('mongoose');
 
+/**
+ * Performance Audit Protocol (Review Schema)
+ * Defines the qualitative assessment parameters for completed asset liquidations.
+ */
 const reviewSchema = new mongoose.Schema({
   rating: {
     type: Number,
-    required: true,
+    required: [true, 'Compliance rating is required'],
     min: 1,
     max: 5
   },
   feedback: {
     type: String,
-    required: true
+    required: [true, 'Institutional feedback is required']
   },
   auctionId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -31,5 +35,10 @@ const reviewSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+/**
+ * Audit Integrity Index: Optimize for auctioneer performance lookups
+ */
+reviewSchema.index({ auctioneerId: 1, rating: -1 });
 
 module.exports = mongoose.model('Review', reviewSchema);
