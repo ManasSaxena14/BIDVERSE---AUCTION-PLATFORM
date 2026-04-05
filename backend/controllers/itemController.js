@@ -62,32 +62,81 @@ const getItems = asyncHandler(async (req, res, next) => {
   if (sort === 'latest') sortOption = { createdAt: -1 };
 
   const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  const limitNum = Math.min(parseInt(limit), 100); // Max 100 items per page
   const skip = (pageNum - 1) * limitNum;
 
   /**
-   * Execution: Fetch assets with automated status synchronization
+   * Execution: Update expired items first, then fetch with bid counts
+   * Using aggregation pipeline for better performance (avoids N+1 queries)
    */
-  const items = await AuctionItem.findWithUpdatedStatus(query, null, {
-    sort: sortOption,
-    skip,
-    limit: limitNum,
-    populate: { path: 'createdBy', select: 'name email' }
-  });
-
-  const Bid = require('../models/Bid');
-  const itemsWithBids = await Promise.all(items.map(async (item) => {
-    const totalBids = await Bid.countDocuments({ item: item._id });
-    const itemObj = item.toObject();
-    itemObj.totalBids = totalBids;
-    return itemObj;
-  }));
+  await AuctionItem.updateExpiredItems();
+  
+  const itemsWithBids = await AuctionItem.aggregate([
+    // Match the query criteria
+    { $match: query },
+    
+    // Lookup bids for each item
+    {
+      $lookup: {
+        from: 'bids',
+        localField: '_id',
+        foreignField: 'item',
+        as: 'bids'
+      }
+    },
+    
+    // Add totalBids field
+    {
+      $addFields: {
+        totalBids: { $size: '$bids' }
+      }
+    },
+    
+    // Remove the bids array from output (we only need the count)
+    {
+      $project: {
+        bids: 0
+      }
+    },
+    
+    // Sort
+    { $sort: sortOption },
+    
+    // Skip and limit for pagination
+    { $skip: skip },
+    { $limit: limitNum },
+    
+    // Populate createdBy field
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'createdBy',
+        foreignField: '_id',
+        as: 'createdBy'
+      }
+    },
+    
+    // Convert createdBy array to single object
+    {
+      $unwind: {
+        path: '$createdBy',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    
+    // Project only needed fields from createdBy
+    {
+      $project: {
+        'createdBy.password': 0
+      }
+    }
+  ]);
 
   const total = await AuctionItem.countDocuments(query);
 
   res.status(200).json({
     success: true,
-    count: items.length,
+    count: itemsWithBids.length,
     total,
     page: pageNum,
     pages: Math.ceil(total / limitNum),

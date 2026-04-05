@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
+import logoImage from '../assets/LOGO.png';
 import {
   Menu, X, Search, User, LogOut, ChevronDown,
   Home, Gavel, LayoutGrid, Trophy, PlusCircle, Settings, Shield,
@@ -84,7 +85,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group" id="navbar-logo">
             <img 
-              src="/src/assets/LOGO.png" 
+              src={logoImage} 
               alt="BidVerse Logo" 
               className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-lg"
             />
