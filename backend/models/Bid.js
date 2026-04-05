@@ -27,6 +27,7 @@ const bidSchema = new mongoose.Schema({
  */
 bidSchema.index({ item: 1, amount: -1 }); // Optimized for "Highest Bid" lookups
 bidSchema.index({ user: 1, createdAt: -1 }); // Optimized for user proposal history
+bidSchema.index({ user: 1, item: 1 }, { unique: true }); // One bid per user per item
 
 /**
  * Integrity Guard: Ensure all proposals meet the strictly increasing valuation protocol

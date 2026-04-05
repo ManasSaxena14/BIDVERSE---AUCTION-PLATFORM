@@ -1,123 +1,86 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useItems } from '../context/ItemContext';
 import ItemCard from '../components/ItemCard';
-import { 
-  HiOutlineArrowLeft, 
-  HiOutlineRectangleGroup,
-  HiOutlineInboxStack,
-  HiOutlineAdjustmentsHorizontal
-} from 'react-icons/hi2';
+import { ArrowLeft, SlidersHorizontal, Package } from 'lucide-react';
 
 const CategoryItems = () => {
   const { categoryName } = useParams();
-  const navigate = useNavigate();
   const { items, fetchItems, loading } = useItems();
-  const [categoryItems, setCategoryItems] = useState([]);
+  const [sortBy, setSortBy] = useState('latest');
 
   useEffect(() => {
-    loadCategoryItems();
+    fetchItems({ category: categoryName, limit: 100 }).catch(() => {});
   }, [categoryName]);
 
-  const loadCategoryItems = async () => {
-    try {
-      await fetchItems({ category: categoryName, limit: 100 });
-    } catch (error) {
-      // Analysis for category load failure protocol
-    }
-  };
-
-  useEffect(() => {
-    setCategoryItems(items);
-  }, [items]);
-
-  const formatCategoryName = (name) => {
-    return name.charAt(0).toUpperCase() + name.slice(1);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0D0D0D] space-y-4">
-        <div className="w-10 h-10 border-t-2 border-[#D4AF37] rounded-full animate-spin"></div>
-        <div className="text-[10px] text-[#D4AF37] font-black tracking-[0.5em] uppercase animate-pulse">
-          Retrieving {formatCategoryName(categoryName)} Collection...
-        </div>
-      </div>
-    );
-  }
+  const sortedItems = [...(items || [])].sort((a, b) => {
+    if (sortBy === 'price_asc') return (a.currentBid || 0) - (b.currentBid || 0);
+    if (sortBy === 'price_desc') return (b.currentBid || 0) - (a.currentBid || 0);
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D]">
-      <header className="relative border-b border-white/5 py-40 bg-[#0A0A0A] overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#D4AF37]/5 blur-[150px] pointer-events-none" />
-        <div className="relative max-w-7xl mx-auto px-4 lg:px-8 text-center space-y-10 z-10">
-          <div className="inline-flex items-center gap-3 px-5 py-2 bg-white/5 border border-white/10 rounded-full text-white/40 text-[9px] font-black tracking-[0.4em] uppercase">
-            <HiOutlineRectangleGroup className="text-xs text-[#D4AF37]" />
-            Curated Classification
-          </div>
-          <div className="space-y-6">
-            <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter uppercase leading-none italic">
-              {formatCategoryName(categoryName)}
+    <div className="page-container" id="category-items-page">
+      <div className="section-container">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <Link to="/categories" className="btn-ghost text-sm mb-3 inline-flex">
+              <ArrowLeft className="w-4 h-4" /> Categories
+            </Link>
+            <h1 className="text-3xl font-bold text-text-primary">
+              {decodeURIComponent(categoryName)}
             </h1>
-            <p className="text-[11px] text-white/20 max-w-xl mx-auto font-black tracking-[0.3em] uppercase leading-relaxed">
-              Explore classified assets within the {formatCategoryName(categoryName)} collective portfolio.
-            </p>
+            <p className="text-text-secondary text-sm mt-1">{sortedItems.length} items found</p>
           </div>
-          <div className="pt-8">
-            <button 
-              onClick={() => navigate('/categories')}
-              className="inline-flex items-center gap-3 px-10 py-5 bg-white/5 border border-white/10 text-white/40 rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all shadow-2xl"
+
+          {/* Sort */}
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-text-muted" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="glass-input py-2 px-3 text-sm w-44"
+              id="sort-select"
             >
-              <HiOutlineArrowLeft className="text-sm" /> Portfolio Index
-            </button>
+              <option value="latest">Latest First</option>
+              <option value="price_asc">Price: Low → High</option>
+              <option value="price_desc">Price: High → Low</option>
+            </select>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-32">
-        {categoryItems.length > 0 ? (
-          <div className="space-y-20">
-            <header className="flex justify-between items-end border-b border-white/5 pb-10">
-              <div className="space-y-2">
-                <h2 className="text-[10px] font-black text-white/20 tracking-[0.5em] uppercase">
-                  Verified Holdings
-                </h2>
-                <div className="text-3xl font-black text-white tracking-tighter italic italic uppercase">
-                  {categoryItems.length} Registered Asset{categoryItems.length !== 1 ? 's' : ''}
+        {/* Items Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="glass-card overflow-hidden">
+                <div className="h-48 shimmer" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 w-3/4 shimmer rounded" />
+                  <div className="h-6 w-1/2 shimmer rounded" />
                 </div>
               </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                <HiOutlineAdjustmentsHorizontal className="text-white/20 text-xl" />
-              </div>
-            </header>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
-              {categoryItems.map(item => (
-                <ItemCard key={item._id} item={item} />
-              ))}
-            </div>
+            ))}
+          </div>
+        ) : sortedItems.length === 0 ? (
+          <div className="text-center py-20">
+            <Package className="w-12 h-12 text-text-muted mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-text-primary mb-2">No Items Found</h3>
+            <p className="text-sm text-text-muted mb-4">No items in this category yet</p>
+            <Link to="/categories" className="btn-gold-outline inline-flex">
+              Browse Categories
+            </Link>
           </div>
         ) : (
-          <div className="text-center py-48 bg-white/5 border border-dashed border-white/10 rounded-[4rem] relative overflow-hidden backdrop-blur-3xl shadow-2xl space-y-12">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 blur-[120px] pointer-events-none" />
-            <HiOutlineInboxStack className="text-8xl text-white/5 mx-auto" />
-            <div className="space-y-6">
-              <h3 className="text-3xl font-black text-white tracking-tighter uppercase italic leading-none">No Assets Identified</h3>
-              <p className="max-w-md mx-auto text-[11px] font-black text-white/20 tracking-[0.3em] uppercase leading-relaxed">
-                The {formatCategoryName(categoryName)} collection is currently fully allocated. System synchronization will update upon availability.
-              </p>
-            </div>
-            <div className="pt-8">
-              <button 
-                onClick={() => navigate('/')}
-                className="px-12 py-6 bg-[#D4AF37] text-[#0D0D0D] rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase hover:bg-white transition-all shadow-[0_0_30px_rgba(212,175,55,0.15)] leading-none"
-              >
-                Master Portfolio
-              </button>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {sortedItems.map((item, i) => (
+              <ItemCard key={item._id} item={item} index={i} />
+            ))}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 };

@@ -1,27 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { 
-  HiOutlineUser, 
-  HiOutlineEnvelope, 
-  HiOutlineLockClosed, 
-  HiOutlineIdentification,
-  HiOutlineBriefcase,
-  HiOutlineXMark
-} from 'react-icons/hi2';
+import { useToast } from '../context/ToastContext';
+import ParticleBackground from '../components/ParticleBackground';
+import { Mail, Lock, User, Gavel, UserPlus, Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
 const Signup = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'bidder'
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
   const { signup } = useAuth();
+  const { addToast } = useToast();
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'bidder' });
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,134 +20,200 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
-
     try {
       await signup(formData);
+      addToast('Welcome to BidVerse!', 'success');
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Identity registration protocol failure.');
+      addToast(err.response?.data?.message || 'Signup failed', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  // Password strength
+  const getPasswordStrength = () => {
+    const pw = formData.password;
+    if (!pw) return { level: 0, label: '', color: '' };
+    let score = 0;
+    if (pw.length >= 6) score++;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    if (score <= 2) return { level: score, label: 'Weak', color: 'bg-red-500' };
+    if (score <= 3) return { level: score, label: 'Medium', color: 'bg-gold' };
+    return { level: score, label: 'Strong', color: 'bg-neon-green' };
+  };
+
+  const passwordStrength = getPasswordStrength();
+
+  const roles = [
+    { value: 'bidder', label: 'Bidder', desc: 'Bid on items', icon: Gavel },
+    { value: 'auctioneer', label: 'Auctioneer', desc: 'Sell items', icon: ShieldCheck },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#0D0D0D] flex items-center justify-center py-20 px-4 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none" style={{
-        backgroundImage: `radial-gradient(circle at 2px 2px, rgba(212,175,55,0.3) 1px, transparent 0)`,
-        backgroundSize: '48px 48px'
-      }}></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#D4AF37]/5 blur-[120px] rounded-full pointer-events-none"></div>
+    <div className="min-h-screen flex items-center justify-center relative px-4 py-24" id="signup-page">
+      <ParticleBackground particleCount={30} />
+      <div className="absolute inset-0 bg-gradient-hero" />
 
-      <div className="max-w-md w-full relative">
-        <header className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-full text-[#D4AF37] text-[10px] font-black tracking-[0.3em] uppercase mb-8">
-            <HiOutlineIdentification className="text-sm" />
-            Identity Registration
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, type: 'spring', damping: 25 }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div className="glass-card p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-gold flex items-center justify-center mx-auto mb-4 shadow-glow-gold-sm">
+              <UserPlus className="w-7 h-7 text-bg-deep" />
+            </div>
+            <h1 className="text-2xl font-bold text-text-primary">Create Account</h1>
+            <p className="text-sm text-text-secondary mt-1">Join the BidVerse community</p>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 uppercase">
-            Join the <span className="text-[#D4AF37]">Elite</span>
-          </h1>
-          <p className="text-white/40 text-[10px] font-black tracking-widest uppercase leading-loose">
-            Establish your credentials to engage with the master portfolio.
-          </p>
-        </header>
 
-        <section className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl relative">
-          {error && (
-            <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-500 text-[9px] font-black tracking-widest uppercase text-center">
-              <HiOutlineXMark className="text-lg" />
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[9px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                <HiOutlineUser /> Full Identity
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
-                placeholder="Full Name"
-              />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Name */}
+            <div>
+              <label className="block text-sm text-text-secondary mb-2" htmlFor="signup-name">Full Name</label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                <input
+                  type="text"
+                  id="signup-name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Your name"
+                  required
+                  className="glass-input pl-11"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[9px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                <HiOutlineEnvelope /> Primary Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
-                placeholder="verified_user@domain.com"
-              />
+            {/* Email */}
+            <div>
+              <label className="block text-sm text-text-secondary mb-2" htmlFor="signup-email">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                <input
+                  type="email"
+                  id="signup-email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="your@email.com"
+                  required
+                  className="glass-input pl-11"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[9px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                <HiOutlineLockClosed /> Secure Credentials
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                minLength={6}
-                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
-                placeholder="Min 6 characters"
-              />
+            {/* Password */}
+            <div>
+              <label className="block text-sm text-text-secondary mb-2" htmlFor="signup-password">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="signup-password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Min 6 characters"
+                  required
+                  minLength={6}
+                  className="glass-input pl-11 pr-11"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {/* Strength Meter */}
+              {formData.password && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= passwordStrength.level ? passwordStrength.color : 'bg-white/10'}`} />
+                    ))}
+                  </div>
+                  <p className={`text-xs ${passwordStrength.color === 'bg-neon-green' ? 'text-neon-green' : passwordStrength.color === 'bg-gold' ? 'text-gold' : 'text-red-400'}`}>
+                    {passwordStrength.label}
+                  </p>
+                </div>
+              )}
             </div>
 
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[9px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                <HiOutlineBriefcase /> Engagement Role
-              </label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white/60 text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none appearance-none"
-              >
-                <option value="bidder" className="bg-[#0D0D0D]">Asset Acquisition (Bidder)</option>
-                <option value="auctioneer" className="bg-[#0D0D0D]">Asset Allocation (Auctioneer)</option>
-              </select>
+            {/* Role Selector */}
+            <div>
+              <label className="block text-sm text-text-secondary mb-2">I want to</label>
+              <div className="grid grid-cols-2 gap-3">
+                {roles.map((r) => {
+                  const Icon = r.icon;
+                  const isSelected = formData.role === r.value;
+                  return (
+                    <button
+                      key={r.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, role: r.value })}
+                      className={`p-4 rounded-xl border transition-all duration-200 text-left ${
+                        isSelected
+                          ? 'border-gold/40 bg-gold-50 shadow-glow-gold-sm'
+                          : 'border-glass-border bg-white/3 hover:border-glass-border-light'
+                      }`}
+                    >
+                      <Icon className={`w-5 h-5 mb-2 ${isSelected ? 'text-gold' : 'text-text-muted'}`} />
+                      <p className={`text-sm font-medium ${isSelected ? 'text-gold' : 'text-text-primary'}`}>{r.label}</p>
+                      <p className="text-xs text-text-muted">{r.desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-10 py-5 bg-[#D4AF37] text-[#0D0D0D] rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:bg-white transition-all shadow-2xl disabled:opacity-50 mt-4"
+              className="w-full btn-gold py-3.5 text-base"
+              id="signup-submit-btn"
             >
-              {loading ? 'Initializing...' : 'Register Identity'}
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <UserPlus className="w-5 h-5" />
+                  Create Account
+                </>
+              )}
             </button>
           </form>
 
-          <footer className="mt-12 text-center border-t border-white/5 pt-8">
-            <p className="text-[10px] text-white/30 font-black tracking-widest uppercase">
-              Authorized already?{' '}
-              <Link to="/login" className="text-[#D4AF37] hover:text-white transition-colors ml-1">
-                Establish Access
-              </Link>
-            </p>
-          </footer>
-        </section>
-      </div>
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 divider-glow" />
+            <span className="text-xs text-text-muted">OR</span>
+            <div className="flex-1 divider-glow" />
+          </div>
+
+          <p className="text-center text-sm text-text-secondary">
+            Already have an account?{' '}
+            <Link to="/login" className="text-gold font-medium hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 };
 
-
 export default Signup;
-

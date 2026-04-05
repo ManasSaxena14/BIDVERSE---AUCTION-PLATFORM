@@ -16,11 +16,30 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      const currentUser = authService.getCurrentUser();
+      if (currentUser) {
+        // Set user from localStorage first for immediate UI
+        setUser(currentUser);
+        
+        // Then refresh from server to get latest data (role changes, etc.)
+        try {
+          const response = await authService.getMe();
+          setUser(response.user);
+          if (import.meta.env.DEV) {
+            console.log('User data refreshed from server:', response.user.role);
+          }
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.error('Failed to refresh user data from server:', error);
+          }
+          // If refresh fails, keep the localStorage data but it might be stale
+        }
+      }
+      setLoading(false);
+    };
+    
+    initAuth();
   }, []);
 
   const signup = useCallback(async (userData) => {
@@ -66,6 +85,19 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await authService.getMe();
+      setUser(response.user);
+      return response;
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Failed to refresh user data:', error);
+      }
+      throw error;
+    }
+  }, []);
+
   const value = useMemo(() => ({
     user,
     loading,
@@ -74,8 +106,9 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated,
     hasRole,
-    updateProfile
-  }), [user, loading, signup, login, logout, isAuthenticated, hasRole, updateProfile]);
+    updateProfile,
+    refreshUser
+  }), [user, loading, signup, login, logout, isAuthenticated, hasRole, updateProfile, refreshUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

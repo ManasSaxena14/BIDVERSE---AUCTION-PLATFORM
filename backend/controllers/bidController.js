@@ -11,63 +11,73 @@ const ErrorResponse = require('../utils/errorResponse');
 const createBid = asyncHandler(async (req, res, next) => {
   const { item, amount } = req.body;
 
-  /**
-   * Execution: Atomic update to prevent collision and race conditions
-   */
-  const updatedItem = await AuctionItem.findOneAndUpdate(
-    {
-      _id: item,
-      status: 'active',
-      endDate: { $gt: new Date() },
-      currentBid: { $lt: amount }
-    },
-    { $set: { currentBid: amount } },
-    { new: true, runValidators: true }
-  );
-
-  if (!updatedItem) {
-    const checkItem = await AuctionItem.findById(item);
-    
-    if (!checkItem) {
-      return next(new ErrorResponse('Registry Failure: Targeted asset identifier not found.', 404));
-    }
-    if (checkItem.status === 'closed' || new Date() > checkItem.endDate) {
-      return next(new ErrorResponse('Protocol Violation: Targeted liquidation window has closed.', 400));
-    }
-    if (amount <= checkItem.currentBid) {
-      return next(new ErrorResponse(`Valuation Failure: Minimum required allocation is $${checkItem.currentBid + 0.01}.`, 400));
-    }
-    return next(new ErrorResponse('Transaction Failure: Could not finalize capital allocation proposal. Please re-syndicate.', 400));
+  // Find the auction item
+  const auctionItem = await AuctionItem.findById(item);
+  
+  if (!auctionItem) {
+    return next(new ErrorResponse('Registry Failure: Targeted asset identifier not found.', 404));
   }
 
-  const existingBid = await Bid.findOne({
-    user: req.user._id,
-    item: item
-  });
+  // Validate bid amount
+  if (!amount || amount <= 0) {
+    return next(new ErrorResponse('Protocol Violation: Invalid allocation amount.', 400));
+  }
 
-  let bid;
-  if (existingBid) {
-    existingBid.amount = amount;
-    await existingBid.save();
-    bid = existingBid;
-  } else {
-    bid = await Bid.create({
+  // Check if auction is still active
+  if (auctionItem.status === 'closed' || new Date() > auctionItem.endDate) {
+    return next(new ErrorResponse('Protocol Violation: Targeted liquidation window has closed.', 400));
+  }
+
+  // Check if bid exceeds current bid
+  if (amount <= auctionItem.currentBid) {
+    return next(new ErrorResponse(`Valuation Failure: Bid must exceed current threshold of $${auctionItem.currentBid}.`, 400));
+  }
+
+  // Check if bid meets starting price requirement
+  if (amount < auctionItem.startingPrice) {
+    return next(new ErrorResponse(`Valuation Failure: Bid must meet minimum starting price of $${auctionItem.startingPrice}.`, 400));
+  }
+
+  try {
+    // Check if user already has a bid on this item
+    const existingBid = await Bid.findOne({
       user: req.user._id,
-      item,
-      amount
+      item: item
     });
+
+    let bid;
+    if (existingBid) {
+      // Update existing bid
+      existingBid.amount = amount;
+      await existingBid.save();
+      bid = existingBid;
+    } else {
+      // Create new bid
+      bid = await Bid.create({
+        user: req.user._id,
+        item,
+        amount
+      });
+    }
+
+    // Update the auction item's current bid
+    auctionItem.currentBid = amount;
+    await auctionItem.save();
+
+    // Populate bid with user and item details
+    const populatedBid = await Bid.findById(bid._id)
+      .populate('user', 'name email')
+      .populate('item', 'title currentBid');
+
+    res.status(201).json({
+      success: true,
+      message: 'Capital allocation proposal successfully registered with the global terminal.',
+      bid: populatedBid,
+      currentBid: auctionItem.currentBid
+    });
+  } catch (error) {
+    return next(new ErrorResponse(error.message || 'Transaction Failure: Could not finalize capital allocation proposal.', 500));
   }
-
-  const populatedBid = await Bid.findById(bid._id)
-    .populate('user', 'name email')
-    .populate('item', 'title currentBid');
-
-  res.status(201).json({
-    success: true,
-    message: 'Capital allocation proposal successfully registered with the global terminal.',
-    bid: populatedBid,
-    currentBid: updatedItem.currentBid
-  });
 });
 
 /**
@@ -137,34 +147,47 @@ const getBidById = asyncHandler(async (req, res, next) => {
 const updateBid = asyncHandler(async (req, res, next) => {
   const { amount } = req.body;
 
-  if (!amount) {
-    return next(new ErrorResponse('Protocol Violation: Allocation parameters missing.', 400));
+  if (!amount || amount <= 0) {
+    return next(new ErrorResponse('Protocol Violation: Invalid allocation parameters.', 400));
   }
 
   const bid = req.resource;
   const auctionItem = await AuctionItem.findById(bid.item);
+  
+  if (!auctionItem) {
+    return next(new ErrorResponse('Registry Failure: Associated asset not found.', 404));
+  }
+  
+  // Check if auction is still active
   if (auctionItem.status === 'closed' || new Date() > auctionItem.endDate) {
     return next(new ErrorResponse('Protocol Violation: Targeted liquidation window is no longer active.', 400));
   }
 
-  if (amount <= auctionItem.currentBid) {
+  // Check if new amount exceeds current bid
+  if (amount <= auctionItem.currentBid && bid.amount !== auctionItem.currentBid) {
     return next(new ErrorResponse(`Valuation Failure: Updated allocation must exceed current threshold of $${auctionItem.currentBid}.`, 400));
   }
 
-  bid.amount = amount;
-  await bid.save();
+  try {
+    // Update the bid
+    bid.amount = amount;
+    await bid.save();
 
-  await AuctionItem.updateCurrentBid(bid.item);
+    // Update auction item's current bid to highest bid
+    await AuctionItem.updateCurrentBid(bid.item);
 
-  const updatedBid = await Bid.findById(bid._id)
-    .populate('user', 'name email')
-    .populate('item', 'title currentBid');
+    const updatedBid = await Bid.findById(bid._id)
+      .populate('user', 'name email')
+      .populate('item', 'title currentBid');
 
-  res.status(200).json({
-    success: true,
-    message: 'Capital proposal parameters successfully modified and re-syndicated.',
-    bid: updatedBid
-  });
+    res.status(200).json({
+      success: true,
+      message: 'Capital proposal parameters successfully modified and re-syndicated.',
+      bid: updatedBid
+    });
+  } catch (error) {
+    return next(new ErrorResponse(error.message || 'Transaction Failure: Could not update capital proposal.', 500));
+  }
 });
 
 /**
@@ -175,13 +198,20 @@ const updateBid = asyncHandler(async (req, res, next) => {
 const deleteBid = asyncHandler(async (req, res, next) => {
   const bid = req.resource;
 
-  await Bid.findByIdAndDelete(bid._id);
-  await AuctionItem.updateCurrentBid(bid.item);
+  try {
+    // Delete the bid
+    await Bid.findByIdAndDelete(bid._id);
+    
+    // Recalculate auction item's current bid based on remaining bids
+    await AuctionItem.updateCurrentBid(bid.item);
 
-  res.status(200).json({
-    success: true,
-    message: 'Capital proposal successfully rescinded and purged from the registry.'
-  });
+    res.status(200).json({
+      success: true,
+      message: 'Capital proposal successfully rescinded and purged from the registry.'
+    });
+  } catch (error) {
+    return next(new ErrorResponse(error.message || 'Transaction Failure: Could not rescind capital proposal.', 500));
+  }
 });
 
 module.exports = {

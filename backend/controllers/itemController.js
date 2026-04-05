@@ -75,6 +75,14 @@ const getItems = asyncHandler(async (req, res, next) => {
     populate: { path: 'createdBy', select: 'name email' }
   });
 
+  const Bid = require('../models/Bid');
+  const itemsWithBids = await Promise.all(items.map(async (item) => {
+    const totalBids = await Bid.countDocuments({ item: item._id });
+    const itemObj = item.toObject();
+    itemObj.totalBids = totalBids;
+    return itemObj;
+  }));
+
   const total = await AuctionItem.countDocuments(query);
 
   res.status(200).json({
@@ -83,7 +91,7 @@ const getItems = asyncHandler(async (req, res, next) => {
     total,
     page: pageNum,
     pages: Math.ceil(total / limitNum),
-    items
+    items: itemsWithBids
   });
 });
 

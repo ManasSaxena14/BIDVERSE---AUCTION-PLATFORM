@@ -40,5 +40,6 @@ const reviewSchema = new mongoose.Schema({
  * Audit Integrity Index: Optimize for auctioneer performance lookups
  */
 reviewSchema.index({ auctioneerId: 1, rating: -1 });
+reviewSchema.index({ reviewerId: 1, auctionId: 1 }, { unique: true }); // Prevent duplicate reviews
 
 module.exports = mongoose.model('Review', reviewSchema);

@@ -1,90 +1,113 @@
 import { Link } from 'react-router-dom';
-import { FaGithub, FaInstagram, FaLinkedin } from 'react-icons/fa';
-import logo from '../assets/LOGO.png';
+import { Gavel, Github, Linkedin, Instagram, ArrowUpRight } from 'lucide-react';
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear();
+  const currentYear = 2025;
+
+  const footerLinks = [
+    {
+      title: 'Platform',
+      links: [
+        { label: 'Live Auctions', to: '/#live-auctions' },
+        { label: 'Categories', to: '/categories' },
+        { label: 'Leaderboard', to: '/leaderboard' },
+        { label: 'How It Works', to: '/how-it-works' },
+      ],
+    },
+    {
+      title: 'Company',
+      links: [
+        { label: 'About Us', to: '/about' },
+        { label: 'Contact', to: '/about' },
+        { label: 'Careers', to: '/about' },
+      ],
+    },
+    {
+      title: 'Legal',
+      links: [
+        { label: 'Privacy Policy', to: '/about' },
+        { label: 'Terms of Service', to: '/about' },
+        { label: 'Cookie Policy', to: '/about' },
+      ],
+    },
+  ];
+
+  const socialLinks = [
+    { icon: Github, href: 'https://github.com/ManasSaxena14', label: 'GitHub' },
+    { icon: Linkedin, href: 'https://www.linkedin.com/in/manas-saxena-1b3b27324', label: 'LinkedIn' },
+    { icon: Instagram, href: 'https://www.instagram.com/_manas_14_', label: 'Instagram' },
+  ];
 
   return (
-    <footer className="bg-[#0D0D0D] text-[#E5E4E2] border-t border-white/5 py-24">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
-          
-          <div className="col-span-1 lg:col-span-1">
-            <div className="flex items-center gap-3 mb-8">
-              <img src={logo} alt="BidVerse" className="h-10 w-auto luxury-glow" />
-              <h3 className="text-xl font-black text-[#D4AF37] tracking-[0.2em] uppercase">BidVerse</h3>
-            </div>
-            <p className="text-[11px] text-white/40 leading-loose tracking-[0.05em] uppercase font-black mb-8">
-              The premier global destination for high-value asset liquidation and exclusive portfolio management.
+    <footer className="relative mt-20 border-t border-glass-border" id="main-footer">
+      {/* Glow line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+
+      <div className="section-container py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+          {/* Brand */}
+          <div className="lg:col-span-2 space-y-4">
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-lg bg-gradient-gold flex items-center justify-center">
+                <Gavel className="w-4 h-4 text-bg-deep" />
+              </div>
+              <span className="text-xl font-bold font-display gradient-text-gold">BidVerse</span>
+            </Link>
+            <p className="text-sm text-text-secondary leading-relaxed max-w-sm">
+              The premier destination for premium online auctions. Bid on exclusive items, track live auctions, and compete with collectors worldwide.
             </p>
-            <div className="flex gap-6">
-              {[
-                { icon: FaGithub, href: 'https://github.com/ManasSaxena14' },
-                { icon: FaInstagram, href: 'https://www.instagram.com/_manas_14_/' },
-                { icon: FaLinkedin, href: 'https://www.linkedin.com/in/manas-saxena-1b3b27324/' }
-              ].map((social, i) => (
-                <a 
-                  key={i} 
-                  href={social.href} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all duration-500"
+
+            {/* Social Links */}
+            <div className="flex items-center gap-3 pt-2">
+              {socialLinks.map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  className="w-9 h-9 rounded-xl border border-glass-border flex items-center justify-center text-text-muted hover:text-gold hover:border-gold/30 hover:bg-gold-50 transition-all duration-300"
                 >
-                  <social.icon className="text-lg" />
+                  <Icon className="w-4 h-4" />
                 </a>
               ))}
             </div>
           </div>
 
-          <div>
-            <h4 className="text-[10px] font-black text-[#D4AF37] mb-8 tracking-[0.3em] uppercase">Navigation</h4>
-            <ul className="space-y-4">
-              {['Home', 'Categories', 'Leaderboard', 'About Us'].map((item) => (
-                <li key={item}>
-                  <Link to={`/${item.toLowerCase().replace(' ', '-')}`} className="text-[10px] font-black text-white/20 hover:text-[#D4AF37] transition-all tracking-[0.2em] uppercase">{item}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-[10px] font-black text-[#D4AF37] mb-8 tracking-[0.3em] uppercase">Asset Classes</h4>
-            <ul className="space-y-4">
-              {['Horology', 'Fine Art', 'Estate', 'Blue Chip', 'Automotive'].map((item) => (
-                <li key={item} className="text-[10px] font-black text-white/20 tracking-[0.2em] uppercase cursor-default hover:text-white/40 transition-colors">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-[10px] font-black text-[#D4AF37] mb-8 tracking-[0.3em] uppercase">Protocol</h4>
-            <ul className="space-y-4">
-              {['Safety', 'Authentication', 'Terms', 'Privacy', 'Contact'].map((item) => (
-                <li key={item} className="text-[10px] font-black text-white/20 tracking-[0.2em] uppercase cursor-default hover:text-white/40 transition-colors">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Link Columns */}
+          {footerLinks.map((group) => (
+            <div key={group.title}>
+              <h4 className="text-sm font-semibold text-text-primary mb-4 uppercase tracking-wider">
+                {group.title}
+              </h4>
+              <ul className="space-y-3">
+                {group.links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      to={link.to}
+                      className="text-sm text-text-secondary hover:text-gold transition-colors flex items-center gap-1 group"
+                    >
+                      {link.label}
+                      <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-[9px] font-black text-white/10 tracking-[0.3em] uppercase">
-            © {currentYear} BIDVERSE GLOBAL. OPERATED UNDER PRESTIGE CLEARING PROTOCOL.
+        {/* Bottom Bar */}
+        <div className="divider-glow mt-12 mb-6" />
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-text-muted">
+            &copy; {currentYear} BidVerse. All rights reserved.
           </p>
-          <div className="flex gap-10">
-            {['Terms', 'Transparency', 'Security'].map((item) => (
-              <a key={item} href="#" className="text-[9px] font-black text-white/10 hover:text-[#D4AF37] transition-all tracking-[0.3em] uppercase">{item}</a>
-            ))}
-          </div>
+          <p className="text-xs text-text-dim">
+            Built with precision. Designed for excellence.
+          </p>
         </div>
       </div>
     </footer>
   );
 };
-
 
 export default Footer;

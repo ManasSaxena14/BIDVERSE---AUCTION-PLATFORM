@@ -1,336 +1,341 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  HiOutlineChartBar, 
-  HiOutlineUsers, 
-  HiOutlineClock, 
-  HiOutlineTrophy, 
-  HiOutlineCurrencyDollar, 
-  HiOutlineBanknotes, 
-  HiOutlineBuildingLibrary, 
-  HiOutlineUser, 
-  HiOutlineTag, 
-  HiOutlineClipboardDocumentList, 
-  HiOutlineMicrophone, 
-  HiOutlineFlag, 
-  HiOutlinePhoto, 
-  HiStar
-} from 'react-icons/hi2';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { adminService } from '../services';
+import StatsCard from '../components/StatsCard';
+import {
+  Users, Package, Gavel, DollarSign, TrendingUp, Activity,
+  Shield, Crown, BarChart3, UserCheck, UserX, Trash2,
+  ChevronDown, RefreshCw, Loader2, AlertCircle
+} from 'lucide-react';
+import { format } from 'date-fns';
+import {
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
 
-const Sparkline = ({ data, color = '#D4AF37' }) => {
-  if (!data || data.length === 0) return null;
-  const vals = data.map(d => d.revenue);
-  const max = Math.max(...vals, 1);
-  const w = 120, h = 40;
-  const pts = vals
-    .map((v, i) => `${(i / (vals.length - 1 || 1)) * w},${h - (v / max) * h}`)
-    .join(' ');
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="opacity-80">
-      <polyline fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" points={pts} />
-    </svg>
-  );
-};
-
-const monthName = (m) => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1];
-
-const StatCard = ({ label, value, sub, icon: Icon, accent = '#D4AF37', trend }) => (
-  <div className="relative overflow-hidden bg-[#1A1A1A] border border-white/10 rounded-2xl p-6 hover:border-[#D4AF37]/40 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(212,175,55,0.15)]">
-    <div className="absolute inset-0 bg-gradient-to-br from-white/2 to-transparent pointer-events-none" />
-    <div className="flex items-start justify-between mb-4">
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl text-[#D4AF37]"
-        style={{ background: `${accent}18`, border: `1px solid ${accent}30` }}>
-        <Icon />
-      </div>
-      {trend !== undefined && (
-        <span className={`text-xs font-bold px-2 py-1 rounded-full ${trend >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-          {trend >= 0 ? '▲' : '▼'} {Math.abs(trend)}%
-        </span>
-      )}
-    </div>
-    <div className="text-3xl font-extrabold text-[#F7F7F7] mb-1 tracking-tight">{value}</div>
-    <div className="text-sm font-semibold text-[#D4AF37] tracking-wider uppercase">{label}</div>
-    {sub && <div className="text-xs text-[#E5E4E2]/50 mt-1">{sub}</div>}
-  </div>
-);
-
-const SectionTitle = ({ children }) => (
-  <h2 className="text-xl font-bold text-[#F7F7F7] tracking-wider uppercase mb-5 flex items-center gap-3">
-    <span className="w-1 h-6 rounded-full bg-gradient-to-b from-[#D4AF37] to-[#B8860B]" />
-    {children}
-  </h2>
-);
-
-const RoleBadge = ({ role }) => {
-  const map = {
-    superadmin: 'bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/40',
-    auctioneer: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-    bidder: 'bg-white/10 text-[#E5E4E2] border-white/20'
-  };
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${map[role] || map.bidder}`}>
-      {role === 'superadmin' ? 'Admin' : role.charAt(0).toUpperCase() + role.slice(1)}
-    </span>
-  );
-};
-
-export default function AdminDashboard() {
+const AdminDashboard = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
-  const navigate = useNavigate();
-
   const [stats, setStats] = useState(null);
   const [activities, setActivities] = useState(null);
   const [users, setUsers] = useState([]);
-  const [usersTotal, setUsersTotal] = useState(0);
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
-  const [userSearch, setUserSearch] = useState('');
-  const [userRoleFilter, setUserRoleFilter] = useState('');
-  const [updatingRole, setUpdatingRole] = useState(null);
 
   useEffect(() => {
-    if (user && user.role !== 'superadmin') navigate('/');
-  }, [user, navigate]);
+    loadData();
+  }, []);
 
-  const loadStats = useCallback(async () => {
+  const loadData = async () => {
     try {
-      setLoadingStats(true);
-      const [statsRes, actRes] = await Promise.all([
+      setLoading(true);
+      const [statsRes, actRes, usersRes] = await Promise.all([
         adminService.getStats(),
-        adminService.getActivities(15)
+        adminService.getActivities(20),
+        adminService.getAllUsers({ limit: 50 }),
       ]);
       setStats(statsRes.stats);
       setActivities(actRes.activities);
+      setUsers(usersRes.users || []);
     } catch (err) {
-      addToast('Failed to load dashboard stats', 'error');
+      addToast('Failed to load admin data', 'error');
     } finally {
-      setLoadingStats(false);
-    }
-  }, []);
-
-  const loadUsers = useCallback(async () => {
-    try {
-      setLoadingUsers(true);
-      const res = await adminService.getAllUsers({
-        search: userSearch || undefined,
-        role: userRoleFilter || undefined,
-        limit: 50
-      });
-      setUsers(res.users);
-      setUsersTotal(res.total);
-    } catch (err) {
-      addToast('Failed to load users', 'error');
-    } finally {
-      setLoadingUsers(false);
-    }
-  }, [userSearch, userRoleFilter]);
-
-  useEffect(() => { loadStats(); }, [loadStats]);
-  useEffect(() => {
-    if (activeTab === 'users') loadUsers();
-  }, [activeTab, loadUsers]);
-
-  const handleRoleChange = async (userId, newRole) => {
-    try {
-      setUpdatingRole(userId);
-      await adminService.updateUserRole(userId, newRole);
-      addToast('User role updated successfully', 'success');
-      loadUsers();
-    } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to update role', 'error');
-    } finally {
-      setUpdatingRole(null);
+      setLoading(false);
     }
   };
 
-  const handleStatusToggle = async (userId, currentStatus) => {
+  const handleToggleStatus = async (userId) => {
     try {
       await adminService.toggleUserStatus(userId);
-      addToast(`User marked as ${currentStatus === 'active' ? 'inactive' : 'active'}`, 'success');
-      loadUsers();
+      addToast('User status updated', 'success');
+      loadData();
     } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to toggle user status', 'error');
+      addToast(err.response?.data?.message || 'Failed to update status', 'error');
     }
   };
 
-  const handleDeleteUser = async (userId, userName) => {
-    if (!window.confirm(`Delete user "${userName}"?`)) return;
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Delete this user and all their data?')) return;
     try {
       await adminService.deleteUser(userId);
       addToast('User deleted', 'success');
-      loadUsers();
+      loadData();
     } catch (err) {
       addToast('Failed to delete user', 'error');
     }
   };
 
-  const handleDeleteItem = async (itemId) => {
-    if (!window.confirm('Delete this auction?')) return;
+  const handleRoleChange = async (userId, role) => {
     try {
-      await adminService.forceDeleteItem(itemId);
-      addToast('Auction deleted', 'success');
-      loadStats();
+      await adminService.updateUserRole(userId, role);
+      addToast('Role updated', 'success');
+      loadData();
     } catch (err) {
-      addToast('Failed to delete item', 'error');
+      addToast('Failed to update role', 'error');
     }
   };
 
-  const fmt = (n) => typeof n === 'number' ? n.toLocaleString() : '—';
-  const fmtMoney = (n) => typeof n === 'number' ? `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—';
+  // Chart Data
+  const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const trendData = (stats?.monthlyTrend || []).map(t => ({
+    name: monthNames[t._id.month] || t._id.month,
+    revenue: t.revenue,
+    count: t.count,
+  }));
 
-  if (loadingStats) {
+  const categoryData = (stats?.categoryBreakdown || []).map(c => ({
+    name: c._id || 'Other',
+    value: c.count,
+    totalValue: c.totalValue,
+  }));
+
+  const pieColors = ['#FACC15', '#8B5CF6', '#22C55E', '#06B6D4', '#EF4444', '#F97316', '#EC4899', '#6366F1'];
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
-        <div className="text-center font-bold tracking-widest text-[#D4AF37] uppercase animate-pulse">Loading...</div>
+      <div className="glass-card p-3 text-xs">
+        <p className="text-text-primary font-medium">${payload[0].value?.toLocaleString()}</p>
+      </div>
+    );
+  };
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'users', label: 'Users', icon: Users },
+    { id: 'activity', label: 'Activity', icon: Activity },
+  ];
+
+  const roleBadge = {
+    superadmin: 'badge-danger',
+    auctioneer: 'badge-purple',
+    bidder: 'badge-green',
+  };
+
+  if (loading) {
+    return (
+      <div className="page-container flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-gold animate-spin" />
       </div>
     );
   }
 
-  const s = stats || {};
-  const trend = s.monthlyTrend || [];
-  const maxRev = Math.max(...trend.map(t => t.revenue), 1);
-
-  const tabs = [
-    { id: 'overview', label: 'Overview', icon: HiOutlineChartBar },
-    { id: 'users', label: 'Users', icon: HiOutlineUsers },
-    { id: 'activity', label: 'Activity', icon: HiOutlineClock },
-    { id: 'performers', label: 'Performers', icon: HiOutlineTrophy },
-  ];
-
   return (
-    <div className="min-h-screen bg-[#0D0D0D]">
-      <div className="relative border-b border-[#D4AF37]/20 py-10 bg-[#111]">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between">
+    <div className="page-container" id="admin-dashboard-page">
+      <div className="section-container">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[10px] uppercase font-bold text-green-400 tracking-widest text-white/40">Secure Admin Panel</span>
+              <Shield className="w-5 h-5 text-gold" />
+              <span className="text-xs text-gold font-semibold uppercase tracking-wider">Admin Panel</span>
             </div>
-            <h1 className="text-4xl font-extrabold text-[#F7F7F7] tracking-tight">BidVerse <span className="text-[#D4AF37]">Internal</span></h1>
+            <h1 className="text-3xl font-bold text-text-primary">Platform Dashboard</h1>
           </div>
-          <button onClick={loadStats} className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs font-bold uppercase tracking-widest text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all">Sync Platform</button>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
-        <div className="flex flex-wrap gap-2 mb-10">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 rounded-xl font-bold tracking-widest uppercase text-xs transition-all duration-300 flex items-center gap-2 ${
-                activeTab === tab.id ? 'bg-[#D4AF37] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white/40 border border-white/5'
-              }`}
-            >
-              <tab.icon className="text-lg" /> {tab.label}
-            </button>
-          ))}
+          <button onClick={loadData} className="btn-gold-outline">
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
         </div>
 
-        {activeTab === 'overview' && (
+        {/* Tabs */}
+        <div className="flex gap-1 mb-8 glass-card p-1 w-fit">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === tab.id ? 'bg-gold-100 text-gold' : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                <Icon className="w-4 h-4" /> {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && stats && (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard label="Income" value={fmtMoney(s.finances?.totalIncome)} icon={HiOutlineCurrencyDollar} accent="#34d399" />
-              <StatCard label="Expenses" value={fmtMoney(s.finances?.totalExpenses)} icon={HiOutlineBanknotes} accent="#f87171" />
-              <StatCard label="Net Balance" value={fmtMoney(s.finances?.netBalance)} icon={HiOutlineBuildingLibrary} accent="#a78bfa" />
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatsCard icon={Users} label="Total Users" value={stats.users?.total || 0} color="purple" delay={0} />
+              <StatsCard icon={Package} label="Total Auctions" value={stats.items?.total || 0} color="cyan" delay={100} />
+              <StatsCard icon={Gavel} label="Total Bids" value={stats.bids?.total || 0} color="green" delay={200} />
+              <StatsCard icon={DollarSign} label="Total Volume" value={stats.bids?.totalValue || 0} prefix="$" color="gold" delay={300} />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <StatCard label="Total Users" value={fmt(s.users?.total)} icon={HiOutlineUser} />
-              <StatCard label="Auctions" value={fmt(s.items?.active)} icon={HiOutlineTag} accent="#60a5fa" />
-              <StatCard label="Total Bids" value={fmt(s.bids?.total)} icon={HiOutlineClipboardDocumentList} accent="#a78bfa" />
-              <StatCard label="Max Bid" value={fmtMoney(s.bids?.maxBid)} icon={HiOutlineTrophy} accent="#D4AF37" />
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <StatCard label="Bidders" value={fmt(s.users?.bidders)} icon={HiOutlineUsers} />
-              <StatCard label="Vendors" value={fmt(s.users?.auctioneers)} icon={HiOutlineMicrophone} />
-              <StatCard label="Finished" value={fmt(s.items?.closed)} icon={HiOutlineFlag} />
-              <StatCard label="Minimum" value={fmtMoney(s.bids?.minBid)} icon={HiOutlineChartBar} />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-[#1A1A1A] rounded-2xl p-8 border border-white/5">
-                <SectionTitle>Monthly Trends</SectionTitle>
-                <div className="space-y-4">
-                  {trend.map((t, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <span className="text-[10px] font-bold text-white/20 w-10 uppercase">{monthName(t._id.month)}</span>
-                      <div className="flex-1 bg-[#0D0D0D] rounded-lg h-3 overflow-hidden border border-white/5">
-                        <div className="h-full bg-[#D4AF37]" style={{ width: `${maxRev > 0 ? (t.revenue / maxRev) * 100 : 0}%` }} />
-                      </div>
-                      <span className="text-xs font-bold text-[#D4AF37] w-20 text-right">{fmtMoney(t.revenue)}</span>
-                    </div>
-                  ))}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Revenue Chart */}
+              {trendData.length > 0 && (
+                <div className="glass-card p-6">
+                  <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4">Revenue Trend</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <AreaChart data={trendData}>
+                      <defs>
+                        <linearGradient id="adminGold" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#FACC15" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#FACC15" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="name" tick={{ fill: '#94A3B8', fontSize: 11 }} />
+                      <YAxis tick={{ fill: '#94A3B8', fontSize: 11 }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area type="monotone" dataKey="revenue" stroke="#FACC15" fill="url(#adminGold)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
+              )}
+
+              {/* Category Breakdown */}
+              {categoryData.length > 0 && (
+                <div className="glass-card p-6">
+                  <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4">Category Breakdown</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value" paddingAngle={3}>
+                        {categoryData.map((_, i) => (
+                          <Cell key={i} fill={pieColors[i % pieColors.length]} opacity={0.8} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        return (
+                          <div className="glass-card p-3 text-xs">
+                            <p className="text-text-primary font-medium">{payload[0].name}</p>
+                            <p className="text-text-muted">{payload[0].value} items</p>
+                          </div>
+                        );
+                      }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex flex-wrap gap-2 mt-4 justify-center">
+                    {categoryData.map((c, i) => (
+                      <span key={c.name} className="flex items-center gap-1 text-xs text-text-muted">
+                        <span className="w-2 h-2 rounded-full" style={{ background: pieColors[i % pieColors.length] }} />
+                        {c.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Top Bidders & Auctioneers */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="glass-card p-6">
+                <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-gold" /> Top Bidders
+                </h3>
+                {(stats.topBidders || []).map((b, i) => (
+                  <div key={b._id || i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/3 transition-colors">
+                    <span className="text-xs font-bold text-text-muted w-5">#{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-text-primary truncate">{b.name}</p>
+                      <p className="text-[10px] text-text-dim">{b.totalBids} bids</p>
+                    </div>
+                    <span className="text-sm font-bold gradient-text-gold font-display">${b.totalAmount?.toLocaleString()}</span>
+                  </div>
+                ))}
               </div>
-              <div className="bg-[#1A1A1A] rounded-2xl p-8 border border-white/5">
-                <SectionTitle>Category Allocation</SectionTitle>
-                <div className="space-y-4">
-                  {(s.categoryBreakdown || []).map((cat, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <span className="text-[10px] font-bold text-white/20 w-24 uppercase truncate">{cat._id}</span>
-                      <div className="flex-1 bg-[#0D0D0D] rounded-lg h-2 overflow-hidden border border-white/5">
-                        <div className="h-full bg-[#D4AF37]/40" style={{ width: `${(cat.count / Math.max(...(s.categoryBreakdown || []).map(c => c.count), 1)) * 100}%` }} />
-                      </div>
-                      <span className="text-xs font-bold text-white/60 w-20 text-right">{cat.count} Units</span>
+
+              <div className="glass-card p-6">
+                <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-neon-green" /> Top Auctioneers
+                </h3>
+                {(stats.topAuctioneers || []).map((a, i) => (
+                  <div key={a._id || i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/3 transition-colors">
+                    <span className="text-xs font-bold text-text-muted w-5">#{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-text-primary truncate">{a.name}</p>
+                      <p className="text-[10px] text-text-dim">{a.totalItems} items</p>
                     </div>
-                  ))}
-                </div>
+                    <span className="text-sm font-bold gradient-text-green font-display">${a.totalRevenue?.toLocaleString()}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         )}
 
+        {/* Users Tab */}
         {activeTab === 'users' && (
-          <div className="space-y-6">
-            <div className="flex flex-wrap gap-4 bg-[#1A1A1A] p-6 rounded-2xl border border-white/5">
-              <input type="text" placeholder="Search accounts..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="flex-1 bg-[#0D0D0D] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#D4AF37]/50" />
-              <select value={userRoleFilter} onChange={e => setUserRoleFilter(e.target.value)} className="bg-[#0D0D0D] border border-white/10 rounded-xl px-4 py-3 text-sm text-white/40">
-                <option value="">All Tiers</option>
-                <option value="bidder">Bidders</option>
-                <option value="auctioneer">Auctioneers</option>
-                <option value="superadmin">Admins</option>
-              </select>
-              <button onClick={loadUsers} className="px-8 py-3 bg-[#D4AF37] text-[#0D0D0D] rounded-xl font-bold uppercase text-xs tracking-widest">Execute Filter</button>
+          <div className="glass-card overflow-hidden">
+            <div className="p-4 border-b border-glass-border">
+              <p className="text-sm text-text-secondary">{users.length} users registered</p>
             </div>
-            <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden border border-white/5 overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-[#0D0D0D] border-b border-white/5 text-[10px] uppercase font-bold tracking-widest text-[#D4AF37]">
-                  <tr>
-                    <th className="px-8 py-5">Identity</th>
-                    <th className="px-8 py-5">Credentials</th>
-                    <th className="px-8 py-5">Access Tier</th>
-                    <th className="px-8 py-5">Lifecycle</th>
-                    <th className="px-8 py-5">Registry Date</th>
-                    <th className="px-8 py-5 text-right">Commands</th>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-glass-border">
+                    <th className="text-left p-4 text-xs text-text-muted uppercase tracking-wider">User</th>
+                    <th className="text-left p-4 text-xs text-text-muted uppercase tracking-wider">Role</th>
+                    <th className="text-left p-4 text-xs text-text-muted uppercase tracking-wider">Status</th>
+                    <th className="text-left p-4 text-xs text-text-muted uppercase tracking-wider">Joined</th>
+                    <th className="text-right p-4 text-xs text-text-muted uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm divide-y divide-white/5">
-                  {users.map(u => (
-                    <tr key={u._id} className="hover:bg-white/2 transition-colors">
-                      <td className="px-8 py-5"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] font-black text-xs uppercase">{u.name?.charAt(0)}</div><span className="font-bold text-white/80">{u.name}</span></div></td>
-                      <td className="px-8 py-5 text-white/40">{u.email}</td>
-                      <td className="px-8 py-5"><RoleBadge role={u.role} /></td>
-                      <td className="px-8 py-5">
-                        <button onClick={() => handleStatusToggle(u._id, u.status)} disabled={u._id === user?.id} className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${u.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>{u.status}</button>
-                      </td>
-                      <td className="px-8 py-5 text-[#E5E4E2]/20 font-bold text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
-                      <td className="px-8 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {u._id !== user?.id && (
-                            <>
-                              <select value={u.role} onChange={e => handleRoleChange(u._id, e.target.value)} className="bg-[#0D0D0D] border border-white/5 text-[10px] uppercase font-bold rounded-lg px-2 py-1.5 focus:border-[#D4AF37]/40 outline-none">
-                                <option value="bidder">Promote to Bidder</option>
-                                <option value="auctioneer">Promote to Vendor</option>
-                                <option value="superadmin">Authorize Admin</option>
-                              </select>
-                              <button onClick={() => handleDeleteUser(u._id, u.name)} className="text-[10px] font-black uppercase text-red-500/40 hover:text-red-500 transition-colors">Terminate</button>
-                            </>
-                          )}
+                <tbody className="divide-y divide-glass-border">
+                  {users.map((u) => (
+                    <tr key={u._id} className="hover:bg-white/3 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-gold flex items-center justify-center">
+                            <span className="text-xs font-bold text-bg-deep">{u.name?.charAt(0).toUpperCase()}</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-text-primary">{u.name}</p>
+                            <p className="text-xs text-text-muted">{u.email}</p>
+                          </div>
                         </div>
+                      </td>
+                      <td className="p-4">
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                          className="glass-input py-1 px-2 text-xs w-32"
+                          disabled={u._id === user?.id}
+                        >
+                          <option value="bidder">Bidder</option>
+                          <option value="auctioneer">Auctioneer</option>
+                          <option value="superadmin">Super Admin</option>
+                        </select>
+                      </td>
+                      <td className="p-4">
+                        <span className={u.status === 'active' ? 'badge-green' : 'badge-danger'}>
+                          {u.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-xs text-text-muted">
+                        {u.createdAt ? format(new Date(u.createdAt), 'MMM d, yyyy') : '-'}
+                      </td>
+                      <td className="p-4 text-right">
+                        {u._id !== user?.id && (
+                          <div className="flex items-center gap-2 justify-end">
+                            <button
+                              onClick={() => handleToggleStatus(u._id)}
+                              className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+                              title={u.status === 'active' ? 'Deactivate' : 'Activate'}
+                            >
+                              {u.status === 'active' ? (
+                                <UserX className="w-4 h-4 text-text-muted" />
+                              ) : (
+                                <UserCheck className="w-4 h-4 text-neon-green" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(u._id)}
+                              className="p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-400" />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -340,93 +345,26 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'activity' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-[#1A1A1A] rounded-2xl p-8 border border-white/5">
-              <SectionTitle>Bidding Stream</SectionTitle>
-              <div className="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar">
-                {(activities?.recentBids || []).map(bid => (
-                  <div key={bid._id} className="flex items-center gap-4 p-5 rounded-xl bg-[#0D0D0D] border border-white/5">
-                    <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/5 flex items-center justify-center text-[#D4AF37]"><HiOutlineTag /></div>
+        {/* Activity Tab */}
+        {activeTab === 'activity' && activities && (
+          <div className="space-y-6">
+            <div className="glass-card p-6">
+              <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4">Recent Bids</h3>
+              <div className="space-y-2">
+                {(activities.recentBids || []).map((bid, i) => (
+                  <div key={bid._id || i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/3 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-neon-green-dim flex items-center justify-center">
+                      <Gavel className="w-4 h-4 text-neon-green" />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold text-white/80">{bid.user?.name}</div>
-                      <div className="text-[10px] font-bold text-white/20 uppercase truncate">Bid on "{bid.item?.title}"</div>
+                      <p className="text-sm text-text-primary truncate">
+                        <span className="font-medium">{bid.user?.name}</span> bid on <span className="text-gold">{bid.item?.title}</span>
+                      </p>
+                      <p className="text-[10px] text-text-dim">
+                        {bid.createdAt ? format(new Date(bid.createdAt), 'MMM d, yyyy h:mm a') : ''}
+                      </p>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-black text-[#D4AF37]">${bid.amount.toLocaleString()}</div>
-                      <div className="text-[8px] font-black text-white/10 uppercase tracking-widest">{new Date(bid.createdAt).toLocaleDateString()}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-8">
-              <div className="bg-[#1A1A1A] rounded-2xl p-8 border border-white/5">
-                <SectionTitle>Auction Log</SectionTitle>
-                <div className="space-y-4">
-                  {(activities?.recentItems || []).map(item => (
-                    <div key={item._id} className="flex items-center gap-4 p-4 bg-[#0D0D0D] rounded-xl border border-white/5">
-                      <HiOutlinePhoto className="text-white/10 text-2xl" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold text-white/80 truncate">{item.title}</div>
-                        <div className="text-[10px] font-bold text-white/40 uppercase">Author: {item.createdBy?.name}</div>
-                      </div>
-                      <button onClick={() => handleDeleteItem(item._id)} className="p-2 text-red-500/20 hover:text-red-500 transition-colors uppercase font-black text-[8px] tracking-tighter">Force Flush</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-[#1A1A1A] rounded-2xl p-8 border border-white/5">
-                <SectionTitle>Registry Log</SectionTitle>
-                <div className="space-y-4">
-                  {(activities?.recentUsers || []).map(u => (
-                    <div key={u._id} className="flex items-center gap-4 p-4 bg-[#0D0D0D] rounded-xl border border-white/5">
-                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-xs font-black uppercase text-[#D4AF37]">{u.name?.charAt(0)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold text-white/80 truncate">{u.name}</div>
-                        <div className="text-[10px] font-bold text-white/20 uppercase truncate">{u.email}</div>
-                      </div>
-                      <RoleBadge role={u.role} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'performers' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-[#1A1A1A] rounded-2xl p-8 border border-white/5">
-              <SectionTitle>Elite Acquisition Rank</SectionTitle>
-              <div className="space-y-4">
-                {(s.topBidders || []).map((b, i) => (
-                  <div key={i} className={`flex items-center gap-5 p-6 rounded-2xl border transition-all ${i === 0 ? 'bg-white/5 border-[#D4AF37]/40 ring-1 ring-[#D4AF37]/20 shadow-[0_0_40px_rgba(212,175,55,0.1)]' : 'bg-[#0D0D0D] border-white/5'}`}>
-                    <div className="text-2xl font-black w-8 text-center text-[#D4AF37]">{i < 3 ? <HiStar className="mx-auto" /> : i+1}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-black text-white uppercase tracking-tight text-lg">{b.name}</div>
-                      <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{b.totalBids} Approved Transactions</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-black text-[#D4AF37] tracking-tighter">{fmtMoney(b.totalAmount)}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-[#1A1A1A] rounded-2xl p-8 border border-white/5">
-              <SectionTitle>Global Vendor Rank</SectionTitle>
-              <div className="space-y-4">
-                {(s.topAuctioneers || []).map((a, i) => (
-                  <div key={i} className={`flex items-center gap-5 p-6 rounded-2xl border transition-all ${i === 0 ? 'bg-white/5 border-blue-500/40 ring-1 ring-blue-500/20 shadow-[0_0_40px_rgba(59,130,246,0.1)]' : 'bg-[#0D0D0D] border-white/5'}`}>
-                    <div className="text-2xl font-black w-8 text-center text-blue-400">{i < 3 ? <HiStar className="mx-auto" /> : i+1}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-black text-white uppercase tracking-tight text-lg">{a.name}</div>
-                      <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{a.totalItems} Distributed Assets</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-black text-blue-400 tracking-tighter">{fmtMoney(a.totalRevenue)}</div>
-                    </div>
+                    <span className="text-sm font-bold gradient-text-gold font-display">${bid.amount?.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -436,5 +374,6 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
-}
+};
 
+export default AdminDashboard;

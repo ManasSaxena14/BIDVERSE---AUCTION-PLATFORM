@@ -1,442 +1,505 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  HiOutlineTag, 
-  HiOutlineUsers, 
-  HiOutlineCurrencyDollar, 
-  HiOutlineCheckBadge,
-  HiOutlineClock,
-  HiOutlineShieldCheck,
-  HiOutlineGlobeAlt,
-  HiOutlineMagnifyingGlass,
-  HiOutlinePencilSquare,
-  HiOutlineInboxStack,
-  HiOutlineArrowRight,
-  HiOutlineScale,
-  HiOutlineSignal
-} from 'react-icons/hi2';
-import { useAuth } from '../context/AuthContext';
+import { Link, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import gsap from 'gsap';
 import { useItems } from '../context/ItemContext';
-import { useToast } from '../context/ToastContext';
-
-const AnimatedCounter = ({ target, suffix = '', prefix = '' }) => {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold: 0.3 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!visible) return;
-    const num = parseInt(target.replace(/[^0-9]/g, ''), 10);
-    if (isNaN(num)) { setCount(target); return; }
-    const duration = 2000;
-    const steps = 60;
-    const increment = num / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= num) { setCount(num); clearInterval(timer); }
-      else setCount(Math.floor(current));
-    }, duration / steps);
-    return () => clearInterval(timer);
-  }, [visible, target]);
-
-  return (
-    <span ref={ref} className="gold-shimmer-text">
-      {prefix}{typeof count === 'number' ? count.toLocaleString() : count}{suffix}
-    </span>
-  );
-};
-
-const Particle = ({ delay, left, size }) => (
-  <div
-    className="absolute rounded-full bg-[#D4AF37] pointer-events-none"
-    style={{
-      left: `${left}%`,
-      bottom: '-10px',
-      width: `${size}px`,
-      height: `${size}px`,
-      opacity: 0,
-      animation: `particleFloat ${10 + Math.random() * 5}s ease-in-out ${delay}s infinite`,
-    }}
-  />
-);
-
-const FeatureCard = ({ icon: Icon, title, description }) => (
-  <div className="group relative bg-[#1A1A1A]/40 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] p-10 hover:border-[#D4AF37]/30 transition-all duration-700 hover:shadow-2xl hover:-translate-y-2 overflow-hidden">
-    <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-[60px] pointer-events-none group-hover:bg-[#D4AF37]/10 transition-colors" />
-    <div className="relative z-10 space-y-6">
-      <div className="w-16 h-16 rounded-2xl bg-black border border-white/10 flex items-center justify-center text-[#D4AF37] group-hover:scale-110 group-hover:border-[#D4AF37]/40 transition-all duration-700 shadow-2xl overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20" />
-        <Icon size={28} className="relative z-10" />
-      </div>
-      <div className="space-y-4">
-        <h3 className="text-[10px] font-black text-white tracking-[0.4em] uppercase italic leading-none">{title}</h3>
-        <p className="text-white/20 text-[9px] font-black tracking-[0.2em] uppercase leading-relaxed group-hover:text-white/40 transition-colors">{description}</p>
-      </div>
-    </div>
-  </div>
-);
+import { useAuth } from '../context/AuthContext';
+import ItemCard from '../components/ItemCard';
+import ParticleBackground from '../components/ParticleBackground';
+import Testimonials from '../components/Testimonials';
+import {
+  ArrowRight, TrendingUp, Users, Gavel, Zap, ChevronRight,
+  Sparkles, LayoutGrid, Crown, ArrowLeft, ArrowRight as ChevronRightIcon,
+  Cpu, Palette, Gem, Car, Shirt, Trophy, Medal, BookOpen, Music, Home as HomeIcon, Box, Building
+} from 'lucide-react';
 
 const Home = () => {
+  const { items, fetchItems, loading } = useItems();
   const { user } = useAuth();
-  const { items, loading, fetchItems } = useItems();
-  const { addToast } = useToast();
-  const [activeTab, setActiveTab] = useState('all');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [heroLoaded, setHeroLoaded] = useState(false);
-  const itemsPerPage = 12;
+  const [searchParams] = useSearchParams();
+  const heroRef = useRef(null);
+  const title1Ref = useRef(null);
+  const title2Ref = useRef(null);
+  const title3Ref = useRef(null);
+  const subtitleRef = useRef(null);
+  const ctaRef = useRef(null);
 
-  useEffect(() => { setHeroLoaded(true); }, []);
+  // Pagination State for Live Auctions (3x3 Grid = 9 items)
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
   useEffect(() => {
-    loadItems();
-  }, [activeTab, selectedCategory, searchQuery, currentPage]);
+    const search = searchParams.get('search');
+    fetchItems(search ? { search, limit: 100 } : { limit: 100 }).catch(() => {});
+  }, [searchParams]);
 
-  const loadItems = async () => {
-    try {
-      const params = {
-        status: activeTab === 'all' ? undefined : activeTab,
-        category: selectedCategory === 'all' ? undefined : selectedCategory,
-        search: searchQuery || undefined,
-        page: currentPage,
-        limit: itemsPerPage
-      };
-      const response = await fetchItems(params);
-      setTotalPages(response.pages || 1);
-    } catch (error) {
-      // Protocol failure logging authorized
+  // Enhanced GSAP Hero Animation
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+
+      tl.fromTo([title1Ref.current, title2Ref.current, title3Ref.current], 
+        { opacity: 0, y: 80, rotationX: -20, filter: 'blur(10px)' }, 
+        { opacity: 1, y: 0, rotationX: 0, filter: 'blur(0px)', duration: 1.2, stagger: 0.2 }
+      )
+      .fromTo(subtitleRef.current, 
+        { opacity: 0, y: 40, filter: 'blur(5px)' }, 
+        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1 }, 
+        '-=0.8'
+      )
+      .fromTo(ctaRef.current,
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.8, ease: 'back.out(1.5)' },
+        '-=0.6'
+      );
+    }, heroRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  const activeItems = items?.filter(item => item.status === 'active' && new Date(item.endDate) > new Date()) || [];
+  
+  // Pagination Logic
+  const totalPages = Math.ceil(activeItems.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentActiveItems = activeItems.slice(indexOfFirstItem, indexOfLastItem);
+
+  const paginate = (pageNumber) => {
+    if (pageNumber > 0 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+      document.getElementById('live-auctions').scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString(undefined, { 
-      year: 'numeric', month: 'short', day: 'numeric' 
-    }).toUpperCase();
+  // Trending limited to exactly 3
+  const trendingItems = [...(items || [])].sort((a, b) => (b.currentBid || 0) - (a.currentBid || 0)).slice(0, 3);
+  
+  const categories = [...new Set((items || []).map(item => item.category).filter(Boolean))];
+
+  const categoryIcons = {
+    'Electronics': Cpu, 'Art': Palette, 'Jewelry': Gem, 'Vehicles': Car, 'Automotive': Car,
+    'Fashion': Shirt, 'Collectibles': Trophy, 'Sports': Medal, 'Books': BookOpen,
+    'Music': Music, 'Home': HomeIcon, 'Real Estate': Building, 'Other': Box,
   };
 
-  const isExpired = (endDate) => new Date(endDate) < new Date();
+  const howItWorks = [
+    { icon: Users, title: 'Exclusive Access', desc: 'Secure your membership to the most prestigious auction house online', color: 'purple' },
+    { icon: Gavel, title: 'Live Bidding', desc: 'Experience the thrill of real-time combat for the rarest acquisitions', color: 'green' },
+    { icon: Crown, title: 'Dominate & Win', desc: 'Outbid rivals, claim your prize, and ascend the absolute global hierarchy', color: 'gold' },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D]">
-      
-      {/* ═══════ EXECUTIVE TERMINAL (HERO) ═══════ */}
-      <section className="relative overflow-hidden min-h-screen flex items-center bg-[#070707] border-b border-white/5">
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-[700px] h-[700px] bg-[#D4AF37]/5 rounded-full blur-[180px] animate-heroGlow pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-[900px] h-[900px] bg-[#B8860B]/3 rounded-full blur-[250px] pointer-events-none" />
-          <div className="absolute inset-0 opacity-5" style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(212,175,55,1) 1px, transparent 0)',
-            backgroundSize: '64px 64px'
-          }} />
-          {[...Array(20)].map((_, i) => (
-            <Particle key={i} delay={i * 0.5} left={2 + i * 5} size={1 + Math.random() * 2} />
-          ))}
-        </div>
+    <div className="min-h-screen">
+      {/* ============ HERO SECTION ============ */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden" id="hero-section">
+        <ParticleBackground particleCount={60} />
+        <div className="absolute inset-0 bg-gradient-hero" />
 
-        <div className="relative max-w-7xl mx-auto px-4 lg:px-8 py-32 text-center w-full z-10 space-y-16">
-          <div className={`inline-flex items-center gap-4 px-6 py-2 rounded-full bg-white/5 border border-white/10 transition-all duration-1000 ${heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <HiOutlineSignal className="text-[#D4AF37] text-xs animate-pulse" />
-            <span className="text-[10px] font-black text-white/40 tracking-[0.5em] uppercase leading-none">Global Network: Synchronized</span>
-          </div>
+        {/* Ambient Orbs - More prominent for eye-catchy effect */}
+        <motion.div 
+          className="absolute top-0 right-0 w-[500px] h-[500px] bg-gold/10 rounded-full blur-[150px]"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-neon-purple/5 rounded-full blur-[150px]"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, -30, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-neon-green/5 rounded-full blur-[120px]"
+          animate={{
+            x: [0, -40, 0],
+            y: [0, 40, 0],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+        />
 
-          <div className="space-y-8">
-            <h1 className={`text-7xl md:text-9xl lg:text-[12rem] font-black tracking-tighter transition-all duration-1000 delay-200 leading-none italic ${heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-              <span className="text-white">BID</span>
-              <span className="gold-shimmer-text not-italic">VERSE</span>
+        <div className="section-container relative z-10 w-full">
+          <div className="max-w-4xl mx-auto text-center mt-[-5vh]">
+            {/* Pill Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gold-50 border border-gold/20 mb-8 backdrop-blur-md shadow-glow-gold-sm"
+            >
+              <Sparkles className="w-4 h-4 text-gold" />
+              <span className="text-xs uppercase tracking-[0.2em] text-gold font-bold">The Pinnacle of Auctions</span>
+            </motion.div>
+
+            {/* Title - Staggered lines for maximum impact */}
+            <h1 className="text-6xl sm:text-7xl lg:text-8xl xl:text-9xl font-black leading-[1.05] tracking-tight mb-8 drop-shadow-2xl flex flex-col font-display">
+              <motion.span 
+                ref={title1Ref} 
+                className="text-text-primary pl-2 uppercase tracking-tight inline-block"
+                style={{textShadow: '0 10px 30px rgba(0,0,0,0.8)'}}
+                whileHover={{ 
+                  scale: 1.05,
+                  x: 10,
+                  transition: { duration: 0.3 }
+                }}
+              >
+                Bid.
+              </motion.span>
+              <motion.span 
+                ref={title2Ref} 
+                className="text-text-primary pl-2 uppercase tracking-tight inline-block"
+                style={{textShadow: '0 10px 30px rgba(0,0,0,0.8)'}}
+                whileHover={{ 
+                  scale: 1.05,
+                  x: 10,
+                  transition: { duration: 0.3 }
+                }}
+              >
+                Win.
+              </motion.span>
+              <motion.span 
+                ref={title3Ref} 
+                className="gradient-text-gold text-glow-gold pl-2 uppercase tracking-tight transform-gpu inline-block"
+                animate={{
+                  textShadow: [
+                    '0 0 15px rgba(250, 204, 21, 0.3), 0 0 30px rgba(250, 204, 21, 0.1)',
+                    '0 0 25px rgba(250, 204, 21, 0.5), 0 0 50px rgba(250, 204, 21, 0.2)',
+                    '0 0 15px rgba(250, 204, 21, 0.3), 0 0 30px rgba(250, 204, 21, 0.1)'
+                  ]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                whileHover={{ 
+                  scale: 1.08,
+                  x: 10,
+                  transition: { duration: 0.3 }
+                }}
+              >
+                Dominate.
+              </motion.span>
             </h1>
-            <p className={`text-xl md:text-3xl text-white/40 font-black tracking-[0.2em] uppercase max-w-4xl mx-auto leading-tight transition-all duration-1000 delay-500 ${heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-              The Definitive Global Architecture for <br/>
-              <span className="text-[#D4AF37]">High-Valuation Asset Acquisition</span>
-            </p>
-          </div>
 
-          <div className={`flex flex-col sm:flex-row gap-8 justify-center items-center transition-all duration-1000 delay-700 ${heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-            {!user ? (
-              <>
-                <Link to="/signup" className="px-14 py-6 bg-[#D4AF37] text-[#0D0D0D] rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase hover:bg-white transition-all shadow-2xl leading-none">
-                  Identity Registration
-                </Link>
-                <Link to="/login" className="px-14 py-6 bg-white/5 border border-white/10 text-white/40 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase hover:text-white transition-all leading-none">
-                  Authorize Access
-                </Link>
-              </>
-            ) : (
-              <Link to="/categories" className="px-14 py-6 bg-[#D4AF37] text-[#0D0D0D] rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase hover:bg-white transition-all shadow-2xl shadow-[0_0_50px_rgba(212,175,55,0.2)] leading-none">
-                Master Portfolio Index
-              </Link>
-            )}
-          </div>
-        </div>
+            {/* Subtitle */}
+            <div ref={subtitleRef}>
+              <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed font-light px-4">
+                Command the ultimate auction arena. Where legends bid, fortunes shift, and only the bold claim victory.
+              </p>
+            </div>
 
-        <div className={`absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-6 transition-all duration-1000 delay-1000 ${heroLoaded ? 'opacity-20' : 'opacity-0'}`}>
-          <div className="w-[1px] h-24 bg-gradient-to-b from-[#D4AF37] to-transparent" />
+            {/* CTA Buttons */}
+            <motion.div 
+              ref={ctaRef} 
+              className="flex flex-col sm:flex-row items-center justify-center gap-6"
+            >
+              <motion.div
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <Link to={user ? '/categories' : '/signup'} className="btn-gold px-10 py-5 text-lg shadow-glow-gold group/btn">
+                  <Zap className="w-6 h-6 group-hover/btn:animate-pulse" />
+                  {user ? 'Enter Marketplace' : 'Start Bidding Now'}
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                </Link>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <Link to="/how-it-works" className="btn-ghost text-lg py-5 px-10 border border-glass-border rounded-xl ml-0 bg-[#111111] hover:bg-[#1A1A1A] hover:border-text-secondary transition-all group/discover">
+                  Discover How
+                  <motion.span
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    className="inline-block ml-2"
+                  >
+                    →
+                  </motion.span>
+                </Link>
+              </motion.div>
+            </motion.div>
+
+            {/* Down Indicator */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2.5, duration: 1 }}
+              className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce"
+            >
+              <div className="w-8 h-12 rounded-full border-2 border-gold/30 flex justify-center items-start p-1 bg-[#111111]/50 backdrop-blur-sm">
+                <div className="w-1.5 h-3 bg-gold rounded-full" />
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ═══════ INTELLIGENCE METRICS ═══════ */}
-      <section className="relative border-b border-white/5 bg-[#0D0D0D] py-40">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-20">
-            {[
-              { target: '10000', suffix: '+', label: 'Registered Holdings', icon: HiOutlineTag },
-              { target: '50000', suffix: '+', label: 'Verified Entities', icon: HiOutlineUsers },
-              { prefix: '$', target: '50', suffix: 'M+', label: 'Consolidated Capitalization', icon: HiOutlineCurrencyDollar },
-              { target: '24', suffix: '/7', label: 'Network Sovereignty', icon: HiOutlineShieldCheck },
-            ].map((stat, i) => (
-              <div key={i} className="text-center group space-y-6">
-                <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center mx-auto text-white/20 group-hover:text-[#D4AF37] group-hover:border-[#D4AF37]/40 transition-all duration-700">
-                  <stat.icon />
+      {/* ============ LIVE AUCTIONS (3x3 Grid with Pagination) ============ */}
+      {activeItems.length > 0 && (
+        <section className="py-32" id="live-auctions">
+          <div className="section-container">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-16 gap-4 border-b border-[#1F1F1F] pb-8">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-2.5 h-2.5 rounded-full bg-neon-green animate-pulse" style={{boxShadow: '0 0 10px rgba(34, 197, 94, 0.8)'}} />
+                  <span className="text-sm text-neon-green font-bold uppercase tracking-[0.2em]">Live Arena</span>
                 </div>
-                <div className="space-y-2">
-                  <div className="text-5xl lg:text-7xl font-black text-white tracking-tighter italic">
-                    <AnimatedCounter target={stat.target} suffix={stat.suffix} prefix={stat.prefix || ''} />
+                <h2 className="text-5xl lg:text-6xl font-black text-text-primary font-display tracking-tight">Active Auctions</h2>
+              </div>
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-text-muted hidden sm:block mr-4 font-medium uppercase tracking-widest">Page 0{currentPage} / 0{totalPages}</p>
+                <button 
+                  onClick={() => paginate(currentPage - 1)} 
+                  disabled={currentPage === 1}
+                  className="w-12 h-12 rounded-full bg-[#111111] border border-[#1F1F1F] flex items-center justify-center text-text-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#1A1A1A] hover:border-gold/50 transition-all hover:text-gold"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <button 
+                  onClick={() => paginate(currentPage + 1)} 
+                  disabled={currentPage === totalPages}
+                  className="w-12 h-12 rounded-full bg-[#111111] border border-[#1F1F1F] flex items-center justify-center text-text-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#1A1A1A] hover:border-gold/50 transition-all hover:text-gold"
+                >
+                  <ChevronRightIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* 3x3 Grid strictly */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+              <AnimatePresence mode="popLayout">
+                {currentActiveItems.map((item, i) => (
+                  <motion.div
+                    key={item._id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                  >
+                    <ItemCard item={item} index={i} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+            
+            {/* Pagination Dots Indicator */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-3 mt-16 bg-[#111111]/80 backdrop-blur-sm w-fit mx-auto px-8 py-4 rounded-full border border-[#1F1F1F] shadow-2xl">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => paginate(i + 1)}
+                    className={`transition-all duration-500 rounded-full ${currentPage === i + 1 ? 'w-10 h-1.5 bg-gold shadow-glow-gold' : 'w-1.5 h-1.5 bg-text-dim hover:bg-text-secondary'}`}
+                    aria-label={`Go to page ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ============ TRENDING (Top 3 Only) ============ */}
+      {trendingItems.length > 0 && (
+        <section className="py-32 bg-[#0A0A0A] border-y border-[#1F1F1F] relative overflow-hidden" id="trending-section">
+          {/* Ambient rank background */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-gold/5 blur-[150px] pointer-events-none" />
+
+          <div className="section-container relative z-10">
+            <div className="flex flex-col items-center justify-center text-center mb-20">
+              <div className="flex items-center gap-3 mb-4">
+                <TrendingUp className="w-5 h-5 text-gold" />
+                <span className="text-sm text-gold font-bold uppercase tracking-[0.2em]">Market Leaders</span>
+              </div>
+              <h2 className="text-5xl lg:text-7xl font-black text-text-primary font-display tracking-tight drop-shadow-lg">Trending Elite</h2>
+              <p className="text-lg text-text-secondary mt-6 max-w-2xl font-light leading-relaxed">The most sought-after pieces currently dominating the marketplace. High stakes, immense rewards.</p>
+            </div>
+
+            {/* Exactly 3 columns grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+              {trendingItems.map((item, i) => (
+                <motion.div 
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: i * 0.2 }}
+                  key={item._id} 
+                  className="relative group"
+                >
+                  <div className="absolute -top-6 -left-6 w-16 h-16 rounded-full bg-gradient-gold flex items-center justify-center text-bg-deep font-display font-black text-3xl z-20 shadow-[0_0_40px_-5px_rgba(250,204,21,0.6)] border-4 border-[#0A0A0A] group-hover:scale-110 transition-transform duration-500">
+                    {i+1}
                   </div>
-                  <div className="text-[10px] text-white/20 tracking-[0.4em] uppercase font-black">{stat.label}</div>
+                  <ItemCard item={item} index={i} />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ============ HOW IT WORKS ============ */}
+      <section className="py-32" id="how-it-works-preview">
+        <div className="section-container">
+          <div className="text-center mb-24 relative">
+            <h2 className="text-5xl lg:text-7xl font-black text-text-primary mb-6 font-display tracking-tight">The Paradigm</h2>
+            <p className="text-xl text-text-secondary font-light tracking-wide">Master the art of acquisition in three phases</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
+            {/* Connecting line */}
+            <div className="hidden md:block absolute top-[80px] left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent -z-10" />
+
+            {howItWorks.map((step, i) => {
+              const Icon = step.icon;
+              const colorClasses = {
+                gold: 'text-gold bg-gold-50 border border-gold/30 shadow-[0_0_30px_-5px_rgba(250,204,21,0.3)]',
+                green: 'text-neon-green bg-neon-green-dim border border-neon-green/30 shadow-[0_0_30px_-5px_rgba(34,197,94,0.3)]',
+                purple: 'text-neon-purple bg-neon-purple-dim border border-neon-purple/30 shadow-[0_0_30px_-5px_rgba(139,92,246,0.3)]',
+              };
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.9, y: 40 }}
+                  whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.7, delay: i * 0.2, ease: "easeOut" }}
+                  className="glass-card p-12 text-center relative overflow-hidden bg-[#111111]/90 backdrop-blur-2xl border-[#1F1F1F] group hover:border-[#333] transition-colors duration-500"
+                >
+                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-glass-border group-hover:via-gold/30 transition-colors duration-500 to-transparent" />
+                  
+                  <div className="absolute -right-8 -top-8 text-[150px] font-black text-white/[0.015] group-hover:text-gold/[0.03] transition-colors duration-500 select-none pointer-events-none font-display leading-none">
+                    0{i+1}
+                  </div>
+                  
+                  <div className={`w-24 h-24 rounded-2xl ${colorClasses[step.color]} flex items-center justify-center mx-auto mb-10 relative z-10 group-hover:-translate-y-2 transition-transform duration-500`}>
+                    <Icon className="w-10 h-10" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-3xl font-bold text-text-primary mb-4 font-display relative z-10 tracking-tight">{step.title}</h3>
+                  <p className="text-lg text-text-secondary leading-relaxed relative z-10 font-light">{step.desc}</p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ CATEGORIES ============ */}
+      {categories.length > 0 && (
+        <section className="py-32 border-t border-[#1F1F1F] bg-[#0A0A0A]" id="categories-preview">
+          <div className="section-container">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <LayoutGrid className="w-5 h-5 text-neon-purple" />
+                  <span className="text-sm text-neon-purple font-bold uppercase tracking-[0.2em]">Curations</span>
+                </div>
+                <h2 className="text-5xl lg:text-7xl font-black text-text-primary font-display tracking-tight drop-shadow-md">Explore Vaults</h2>
+              </div>
+              <Link to="/categories" className="btn-ghost flex items-center mt-auto pb-3 text-lg uppercase tracking-widest font-bold border-b-2 border-[#1F1F1F] hover:border-gold hover:text-gold rounded-none px-0 py-0 transition-all duration-300">
+                View Directory <ArrowRight className="w-5 h-5 ml-3" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              {categories.slice(0, 12).map((cat, i) => {
+                const IconComp = categoryIcons[cat] || Box;
+                return (
+                  <motion.div
+                    key={cat}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                  >
+                    <Link
+                      to={`/category/${encodeURIComponent(cat)}`}
+                      className="glass-card-hover p-10 flex flex-col items-center justify-center gap-6 text-center group h-full bg-[#111111]/80 backdrop-blur-xl border-[#1F1F1F] hover:border-gold/30 transition-all duration-500"
+                    >
+                      <IconComp className="w-12 h-12 text-text-muted group-hover:text-gold group-hover:scale-110 transition-all duration-500 drop-shadow-xl" strokeWidth={1.2} />
+                      <span className="text-sm font-bold text-text-secondary group-hover:text-text-primary transition-colors tracking-[0.1em] uppercase">{cat}</span>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ============ TESTIMONIALS ============ */}
+      <Testimonials />
+
+      {/* ============ CTA ============ */}
+      {!user && (
+        <section className="py-40 relative overflow-hidden" id="cta-section">
+          <div className="absolute inset-0 bg-gradient-to-t from-gold/5 to-transparent pointer-events-none" />
+          
+          <div className="section-container">
+            <div className="glass-card p-20 text-center relative overflow-hidden backdrop-blur-3xl border-gold/20 shadow-[0_20px_100px_-20px_rgba(250,204,21,0.15)] rounded-[3rem]">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[500px] bg-gradient-hero opacity-40 animate-pulse-glow" style={{ mixBlendMode: 'screen' }} />
+              
+              <div className="relative z-10 max-w-3xl mx-auto">
+                <span className="inline-block px-6 py-2 rounded-full border border-gold/20 bg-gold/5 text-sm text-gold font-bold uppercase tracking-[0.3em] mb-8 shadow-glow-gold-sm">The Inner Circle</span>
+                
+                <h2 className="text-6xl lg:text-8xl font-black text-text-primary mb-8 font-display tracking-tight leading-[1.1] drop-shadow-2xl">Claim Your <br/><span className="text-transparent bg-clip-text bg-gradient-gold">Legacy.</span></h2>
+                
+                <p className="text-xl lg:text-2xl text-text-secondary mb-12 leading-relaxed font-light">
+                  Join the elite community of collectors and magnates. Secure your access and start winning exclusive pieces that define absolute status.
+                </p>
+                
+                <Link to="/signup" className="btn-gold px-14 py-6 text-xl inline-flex shadow-[0_0_40px_-10px_rgba(250,204,21,0.5)] hover:scale-105 transition-transform duration-500 rounded-2xl group">
+                  <Zap className="w-6 h-6 mr-3 group-hover:animate-pulse" />
+                  Initiate Access
+                  <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Loading State */}
+      {loading && items?.length === 0 && (
+        <div className="section-container py-32">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} className="glass-card overflow-hidden">
+                <div className="h-64 shimmer" />
+                <div className="p-8 space-y-4">
+                  <div className="h-5 w-3/4 shimmer rounded-lg" />
+                  <div className="flex gap-2">
+                    <div className="h-6 w-20 shimmer rounded-full" />
+                    <div className="h-6 w-20 shimmer rounded-full" />
+                  </div>
+                  <div className="h-8 w-1/3 shimmer rounded-lg pt-4" />
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
-
-      {/* ═══════ CORE ADVANTAGES ═══════ */}
-      <section className="max-w-7xl mx-auto px-4 lg:px-8 py-48">
-        <header className="text-center mb-32 space-y-6">
-          <div className="inline-flex items-center gap-3 px-5 py-2 bg-white/5 border border-white/10 rounded-full text-white/40 text-[9px] font-black tracking-[0.4em] uppercase">
-            Institutional Standards
-          </div>
-          <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter uppercase leading-tight italic">
-            Strategic <span className="text-[#D4AF37] not-italic">Indexing</span>
-          </h2>
-          <p className="max-w-2xl mx-auto text-white/20 text-[11px] font-black tracking-[0.3em] uppercase leading-relaxed">
-            Engineered acquisition frameworks for the most sophisticated global portfolio managers.
-          </p>
-        </header>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          <FeatureCard icon={HiOutlineCheckBadge} title="Verified Authenticity" description="Rigorous authentication protocols for all listed archival inventory." />
-          <FeatureCard icon={HiOutlineClock} title="Real-Time Sync" description="Sub-millisecond synchronization across the global trade network." />
-          <FeatureCard icon={HiOutlineShieldCheck} title="Capital Sovereignty" description="Elite encryption shields protecting high-liquidity settlements." />
-          <FeatureCard icon={HiOutlineGlobeAlt} title="Global Exposure" description="Unrestricted access to high-valuation assets across international jurisdictions." />
-        </div>
-      </section>
-
-      {/* ═══════ MARKET FILTRATION ═══════ */}
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 pb-48">
-        <section className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3.5rem] p-12 md:p-16 shadow-2xl mb-32 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#D4AF37]/5 blur-[150px] pointer-events-none" />
-          
-          <div className="flex flex-col lg:flex-row lg:items-end gap-12 relative z-10">
-            <div className="flex-1 space-y-6">
-              <label className="flex items-center gap-3 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic">
-                <HiOutlineMagnifyingGlass className="text-sm" /> Portfolio Intelligence Search
-              </label>
-              <input
-                type="text"
-                placeholder="Initialize asset synchronization..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-10 py-7 bg-black/40 border border-white/5 text-white text-[10px] font-black tracking-[0.3em] uppercase rounded-2xl focus:ring-1 focus:ring-[#D4AF37]/40 focus:border-[#D4AF37]/40 transition-all outline-none italic placeholder:text-white/10 shadow-inner"
-              />
-            </div>
-
-            <div className="space-y-6">
-              <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic">
-                Protocol Status
-              </label>
-              <div className="flex bg-black/60 p-2 rounded-2xl border border-white/5">
-                {['all', 'active', 'closed'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-8 py-5 rounded-xl text-[9px] font-black tracking-[0.3em] uppercase transition-all duration-700 leading-none ${
-                      activeTab === tab
-                        ? 'bg-[#D4AF37] text-[#0D0D0D] shadow-[0_0_40px_rgba(212,175,55,0.2)]'
-                        : 'text-white/20 hover:text-white/60'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic">
-                Asset Classification
-              </label>
-              <div className="relative">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-10 py-7 bg-black/60 border border-white/5 text-white/40 text-[10px] font-black tracking-[0.3em] uppercase rounded-2xl outline-none focus:ring-1 focus:ring-[#D4AF37]/40 appearance-none cursor-pointer hover:border-[#D4AF37]/30 transition-all min-w-[240px] italic leading-none"
-                >
-                  <option value="all">Comprehensive Index</option>
-                  {['Automotive', 'Jewelry', 'Art', 'Antiques', 'Electronics', 'Fashion', 'Collectibles'].map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <Link to="/categories" className="absolute -bottom-8 right-0 text-[8px] font-black text-white/20 uppercase tracking-widest hover:text-[#D4AF37] transition-colors">View All Classifications</Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════ MASTER PORTFOLIO GRID ═══════ */}
-        <section className="space-y-24">
-          <header className="flex flex-col items-center space-y-6">
-             <div className="w-12 h-px bg-[#D4AF37]/40 shadow-[0_0_10px_#D4AF37]" />
-             <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic text-center">
-              Active <span className="text-[#D4AF37] not-italic">Pools</span>
-            </h2>
-             <p className="text-white/20 text-[11px] font-black tracking-[0.5em] uppercase text-center italic">Curated Acquisition Opportunities</p>
-          </header>
-
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-48 space-y-10">
-              <div className="w-12 h-12 border-t-2 border-[#D4AF37] rounded-full animate-spin shadow-[0_0_30px_rgba(212,175,55,0.2)]" />
-              <p className="text-[10px] text-[#D4AF37] font-black tracking-[0.6em] uppercase animate-pulse">Synchronizing Terminal...</p>
-            </div>
-          ) : items && items.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
-              {items.map((item, idx) => {
-                const expired = isExpired(item.endDate);
-                const isActive = item.status === 'active' && !expired;
-                const canEdit = user && ((item.createdBy && item.createdBy._id === user.id) || user.role === 'superadmin');
-
-                return (
-                  <article
-                    key={item._id}
-                    className="group bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/5 hover:border-[#D4AF37]/40 transition-all duration-700 overflow-hidden hover:-translate-y-4 shadow-2xl relative"
-                    style={{ animationDelay: `${idx * 0.05}s` }}
-                  >
-                    <Link to={`/items/${item._id}`} className="block relative aspect-[5/4] overflow-hidden grayscale hover:grayscale-0 transition-all duration-1000">
-                      <img
-                        src={item.image || 'https://images.unsplash.com/photo-1540932239986-30128078f3c5?auto=format&fit=crop&q=80&w=600'}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-transparent to-transparent opacity-80" />
-                      
-                      <div className="absolute top-8 right-8">
-                        <div className={`px-5 py-2.5 rounded-full text-[9px] font-black tracking-widest uppercase border backdrop-blur-xl ${isActive 
-                          ? 'bg-[#D4AF37] border-[#D4AF37] text-[#0D0D0D] shadow-[0_0_30px_rgba(212,175,55,0.4)]' 
-                          : 'bg-black/60 text-white/20 border-white/10'}`}>
-                          {isActive ? 'LIVE POOL' : 'CLOSED'}
-                        </div>
-                      </div>
-                    </Link>
-
-                    <div className="p-10 space-y-10">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3 text-[9px] font-black text-[#D4AF37] tracking-[0.4em] uppercase">
-                          <HiOutlineScale /> {item.category}
-                        </div>
-                        <h3 className="text-2xl font-black text-white tracking-tighter uppercase group-hover:text-[#D4AF37] transition-colors line-clamp-1 italic">{item.title}</h3>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-10 py-8 border-y border-white/5">
-                        <div className="space-y-2">
-                          <p className="text-[9px] font-black text-white/20 tracking-widest uppercase">Benchmark</p>
-                          <p className="text-3xl font-black text-white tracking-tighter italic">${item.currentBid?.toLocaleString() || '0'}</p>
-                        </div>
-                        <div className="text-right space-y-2">
-                          <p className="text-[9px] font-black text-white/20 tracking-widest uppercase">Settlement</p>
-                          <p className="text-[11px] font-black text-white/60 tracking-[0.2em] uppercase leading-none">{formatDate(item.endDate)}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4 pt-4">
-                        <Link
-                          to={`/items/${item._id}`}
-                          className="flex-1 px-10 py-5 bg-white/5 border border-white/10 text-white/40 text-[10px] font-black tracking-[0.4em] uppercase rounded-2xl hover:bg-[#D4AF37] hover:text-[#0D0D0D] hover:border-[#D4AF37] transition-all text-center leading-none shadow-2xl group/btn"
-                        >
-                          Details <HiOutlineArrowRight className="inline-block ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                        </Link>
-                        {canEdit && (
-                          <Link to={`/update-item/${item._id}`} className="p-5 bg-white/5 text-white/20 hover:text-[#D4AF37] transition-colors rounded-2xl border border-white/5">
-                            <HiOutlinePencilSquare />
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-48 bg-white/5 border border-dashed border-white/10 rounded-[4rem] backdrop-blur-3xl space-y-10">
-              <HiOutlineInboxStack className="text-8xl text-white/5 mx-auto" />
-              <div className="space-y-4">
-                <h3 className="text-3xl font-black text-white tracking-tighter uppercase italic">Portfolio Empty</h3>
-                <p className="max-w-md mx-auto text-white/20 text-[11px] font-black tracking-[0.3em] uppercase leading-relaxed">
-                  The master index is currently synchronized but clear. <br/>Awaiting new archival allocations.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {totalPages > 1 && (
-            <footer className="mt-40 flex items-center justify-center gap-10">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-10 py-6 bg-white/5 text-white/20 border border-white/10 rounded-2xl hover:text-white disabled:opacity-10 transition-all font-black text-[10px] tracking-[0.5em] uppercase hover:border-[#D4AF37]/40 leading-none"
-              >
-                Previous
-              </button>
-              <div className="text-xl font-black text-[#D4AF37] tracking-widest italic gold-shimmer-text">
-                {currentPage} / {totalPages}
-              </div>
-              <button
-                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="px-10 py-6 bg-white/5 text-white/20 border border-white/10 rounded-2xl hover:text-white disabled:opacity-10 transition-all font-black text-[10px] tracking-[0.5em] uppercase hover:border-[#D4AF37]/40 leading-none"
-              >
-                Next
-              </button>
-            </footer>
-          )}
-        </section>
-      </main>
-
-      {/* ═══════ FINAL AUTHORIZATION ═══════ */}
-      {!user && (
-        <section className="relative overflow-hidden border-t border-white/5 py-64 bg-[#050505]">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A1A]/20 to-black pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[#D4AF37]/5 rounded-full blur-[200px] pointer-events-none" />
-
-          <div className="relative max-w-5xl mx-auto px-4 text-center space-y-16 z-10">
-            <div className="space-y-8">
-              <h2 className="text-6xl md:text-9xl font-black text-white tracking-tighter uppercase leading-tight italic">
-                Lodge Your <span className="gold-shimmer-text not-italic">Identity</span>
-              </h2>
-              <p className="text-white/20 text-[11px] font-black tracking-[0.4em] uppercase max-w-2xl mx-auto leading-relaxed">
-                Join the global archival network discovering <br/>and acquiring exclusive high-valuation assets daily.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-10 justify-center pt-8">
-              <Link to="/signup" className="px-16 py-7 bg-[#D4AF37] text-[#0D0D0D] rounded-2xl font-black text-[10px] tracking-[0.5em] uppercase hover:bg-white transition-all shadow-[0_0_60px_rgba(212,175,55,0.2)] leading-none">
-                Register Identity
-              </Link>
-              <Link to="/login" className="px-16 py-7 bg-white/5 border border-white/10 text-white/20 rounded-2xl font-black text-[10px] tracking-[0.5em] uppercase hover:text-white transition-all leading-none">
-                Establish Gateway
-              </Link>
-            </div>
-          </div>
-        </section>
       )}
     </div>
   );

@@ -1,220 +1,163 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useBids } from '../context/BidContext';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useItems } from '../context/ItemContext';
+import { useBids } from '../context/BidContext';
 import { useToast } from '../context/ToastContext';
-import { 
-  HiOutlineBanknotes, 
-  HiOutlineClock, 
-  HiOutlineShieldCheck, 
-  HiOutlineCheckCircle, 
-  HiOutlineXMark,
-  HiOutlineTag,
-  HiOutlineScale,
-  HiOutlineArrowLeft
-} from 'react-icons/hi2';
+import AuctionTimer from '../components/AuctionTimer';
+import {
+  ArrowLeft, Gavel, TrendingUp, DollarSign, Loader2, CheckCircle, AlertCircle, Zap
+} from 'lucide-react';
 
 const PlaceBid = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { createBid } = useBids();
   const { fetchItemById } = useItems();
+  const { createBid, loading: bidLoading } = useBids();
   const { addToast } = useToast();
-
   const [item, setItem] = useState(null);
   const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(true);
 
   useEffect(() => {
-    loadItem();
+    const load = async () => {
+      try {
+        const response = await fetchItemById(id);
+        setItem(response.item);
+      } catch { addToast('Failed to load item', 'error'); }
+      finally { setLoading(false); }
+    };
+    load();
   }, [id]);
 
-  const loadItem = async () => {
-    try {
-      setFetchLoading(true);
-      const response = await fetchItemById(id);
-      setItem(response.item);
-      setAmount((response.item.currentBid + 1).toString());
-    } catch (error) {
-      setError('Protocol failure: Could not retrieve item parameters.');
-    } finally {
-      setFetchLoading(false);
-    }
-  };
+  const minBid = (item?.currentBid || item?.startingPrice || 0) + 1;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
-
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount < minBid) {
+      setError(`Minimum bid: $${minBid.toLocaleString()}`);
+      return;
+    }
     try {
-      await createBid({ item: id, amount: parseFloat(amount) });
-      try {
-        await fetchItemById(id);
-      } catch (refreshErr) {
-        // Non-critical background sync
-      }
-      addToast('Acquisition proposal successfully authorized.', 'success');
-      navigate(`/items/${id}`);
+      await createBid({ item: id, amount: numAmount });
+      setSuccess(true);
+      addToast('Bid placed! You are now leading this auction!', 'success');
+      // Refresh item data to show updated current bid
+      setTimeout(async () => {
+        try {
+          const response = await fetchItemById(id);
+          setItem(response.item);
+        } catch (err) {
+          if (import.meta.env.DEV) {
+            console.error('Failed to refresh item:', err);
+          }
+        }
+      }, 500);
+      // Redirect to item details page after success
+      setTimeout(() => navigate(`/items/${id}`), 2500);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Authorization failed: Proposal rejected.';
-      setError(msg);
-      addToast(msg, 'error');
-    } finally {
-      setLoading(false);
+      setError(err.response?.data?.message || 'Failed to place bid');
     }
   };
 
-  if (fetchLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0D0D0D] space-y-4">
-        <div className="w-10 h-10 border-t-2 border-[#D4AF37] rounded-full animate-spin"></div>
-        <div className="text-[10px] text-[#D4AF37] font-black tracking-[0.5em] uppercase animate-pulse">
-          Initializing Acquisition Protocol...
-        </div>
-      </div>
-    );
+  if (loading) {
+    return <div className="page-container flex items-center justify-center"><Loader2 className="w-8 h-8 text-gold animate-spin" /></div>;
   }
 
   if (!item) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0D0D0D] space-y-8">
-        <HiOutlineXMark className="text-6xl text-red-500/20" />
-        <div className="text-[10px] text-red-500/60 font-black tracking-[0.3em] uppercase">
-          Asset Identification Failed
-        </div>
-        <button onClick={() => navigate(-1)} className="text-[9px] text-[#D4AF37] font-black tracking-[0.4em] uppercase border-b border-[#D4AF37]/30 pb-1 hover:text-white hover:border-white transition-all">Return to Index</button>
-      </div>
-    );
+    return <div className="page-container flex items-center justify-center"><p className="text-text-muted">Item not found</p></div>;
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D]">
-      <header className="relative border-b border-white/5 py-32 bg-[#0A0A0A] overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#D4AF37]/5 blur-[150px] pointer-events-none" />
-        <div className="max-w-4xl mx-auto px-4 lg:px-8 text-center space-y-10 relative z-10">
-          <div className="inline-flex items-center gap-3 px-5 py-2 bg-white/5 border border-white/10 rounded-full text-white/40 text-[9px] font-black tracking-[0.4em] uppercase">
-            <HiOutlineScale className="text-xs text-[#D4AF37]" />
-            Acquisition Authorization
+    <div className="page-container" id="place-bid-page">
+      <div className="section-container max-w-xl">
+        <button onClick={() => navigate(-1)} className="btn-ghost mb-6 text-sm"><ArrowLeft className="w-4 h-4" /> Back</button>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-neon-green to-transparent" />
+
+          {/* Item Preview */}
+          <div className="flex items-start gap-4 mb-8">
+            <img src={item.image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'} alt={item.title} className="w-20 h-20 rounded-xl object-cover" />
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-bold text-text-primary truncate">{item.title}</h2>
+              <p className="text-sm text-text-muted">{item.category}</p>
+              {item.status === 'active' && <AuctionTimer endDate={item.endDate} size="sm" />}
+            </div>
           </div>
-          <div className="space-y-6">
-            <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter uppercase leading-none italic">
-              Lodge <span className="text-[#D4AF37] not-italic">Proposal</span>
-            </h1>
-            <p className="text-[11px] text-white/20 max-w-xl mx-auto font-black tracking-[0.3em] uppercase leading-relaxed italic">
-              Authorization requested for: <span className="text-white">{item.title}</span>
+
+          {/* Current Bid Display */}
+          <div className="glass-card p-6 text-center mb-8">
+            <p className="text-xs text-text-muted uppercase tracking-wider mb-1">Current Highest Bid</p>
+            <p className="text-4xl font-bold gradient-text-gold font-display">
+              ${(item.currentBid || item.startingPrice)?.toLocaleString()}
             </p>
           </div>
-        </div>
-      </header>
 
-      <main className="max-w-4xl mx-auto px-4 lg:px-8 -mt-16 pb-32 relative z-20">
-        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 md:p-16 shadow-2xl space-y-16 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 blur-[120px] pointer-events-none" />
-          
-          <section className="bg-black/40 border border-white/5 rounded-3xl p-8 flex flex-col md:flex-row gap-10 items-center transition-all group hover:border-[#D4AF37]/20">
-            <div className="relative shrink-0">
-               <img
-                src={item.image}
-                alt={item.title}
-                className="w-40 h-40 object-cover rounded-2xl shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700"
-              />
-              <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
-            </div>
-            <div className="flex-1 space-y-8 text-center md:text-left">
-              <h3 className="text-2xl font-black text-white tracking-tighter uppercase leading-tight italic">{item.title}</h3>
-              <div className="grid grid-cols-2 gap-10">
-                <div className="space-y-2">
-                  <p className="text-[8px] font-black text-white/20 tracking-widest uppercase">Benchmark Valuation</p>
-                  <p className="text-3xl font-black text-[#D4AF37] tracking-tighter italic gold-shimmer-text">${item.currentBid.toLocaleString()}</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-[8px] font-black text-white/20 tracking-widest uppercase">Protocol Expiry</p>
-                  <p className="text-[10px] font-black text-white/60 tracking-[0.2em] uppercase">
-                    {new Date(item.endDate).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {error && (
-            <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl flex items-center gap-6 text-red-500 text-[9px] font-black tracking-[0.3em] uppercase transition-all animate-shake">
-              <HiOutlineXMark className="text-xl" />
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-16">
-            <div className="space-y-6">
-              <label className="flex items-center gap-3 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic">
-                <HiOutlineBanknotes className="text-sm" /> Nominal Proposal Authorization (USD)
-              </label>
+          {/* Bid Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm text-text-secondary mb-2">Your Bid</label>
               <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gold font-bold text-lg">$</span>
                 <input
                   type="number"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                  min={item.currentBid + 0.01}
+                  onChange={(e) => { setAmount(e.target.value); setError(''); }}
+                  placeholder={minBid.toString()}
+                  min={minBid}
                   step="0.01"
-                  className="w-full px-12 py-10 bg-black/40 border border-white/5 rounded-[2rem] text-white text-5xl md:text-6xl font-black tracking-tighter focus:ring-0 focus:border-[#D4AF37]/50 transition-all outline-none text-center shadow-inner italic"
-                  placeholder={`Min: ${item.currentBid + 1}`}
+                  className="glass-input pl-10 text-xl font-bold"
+                  id="bid-amount"
                 />
               </div>
-              <p className="text-[9px] font-black text-white/10 tracking-[0.3em] uppercase text-center">
-                Proposed valuation must exceed benchmark threshold: ${item.currentBid.toLocaleString()}
-              </p>
+              <p className="text-xs text-text-muted mt-1">Minimum: ${minBid.toLocaleString()}</p>
             </div>
 
-            <aside className="bg-white/5 border border-white/5 rounded-[2.5rem] p-10 space-y-10">
-              <h4 className="flex items-center gap-3 text-[10px] font-black text-[#D4AF37] tracking-[0.4em] uppercase italic">
-                <HiOutlineShieldCheck className="text-xl" /> Settlement Protocols
-              </h4>
-              <ul className="space-y-6">
-                {[
-                  'Authorization requires immediate capital verification upon successful settlement.',
-                  'Proposals are immutable once acknowledged by the network infrastructure.',
-                  `Protocol termination sequence initiated for: ${new Date(item.endDate).toLocaleString()}`
-                ].map((text, i) => (
-                  <li key={i} className="flex items-start gap-6 group">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]/40 mt-1.5 group-hover:bg-[#D4AF37] transition-colors" />
-                    <span className="text-[10px] font-black text-white/20 group-hover:text-white/40 transition-colors tracking-widest uppercase leading-loose">{text}</span>
-                  </li>
-                ))}
-              </ul>
-            </aside>
+            {/* Quick Amounts */}
+            <div className="grid grid-cols-4 gap-2">
+              {[10, 50, 100, 500].map(inc => (
+                <button key={inc} type="button" onClick={() => { setAmount((minBid + inc).toString()); setError(''); }}
+                  className="py-2 rounded-lg text-xs font-medium bg-white/5 text-text-secondary hover:bg-gold-100 hover:text-gold border border-glass-border transition-all">
+                  +${inc}
+                </button>
+              ))}
+            </div>
 
-            <footer className="flex flex-col sm:flex-row gap-8 pt-10 border-t border-white/5">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-[2] px-12 py-7 bg-[#D4AF37] text-[#0D0D0D] rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase hover:bg-white transition-all flex items-center justify-center gap-4 shadow-2xl disabled:opacity-50 group shadow-[0_0_50px_rgba(212,175,55,0.1)]"
-              >
-                {loading ? 'Authorizing...' : (
-                  <>
-                    <HiOutlineCheckCircle className="text-xl group-hover:scale-110 transition-transform" />
-                    Authorize Proposal
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="flex-1 px-12 py-7 bg-white/5 border border-white/10 text-white/20 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase hover:text-white hover:border-white transition-all flex items-center justify-center gap-3"
-              >
-                <HiOutlineArrowLeft className="text-sm" /> Retract
-              </button>
-            </footer>
+            {error && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                <AlertCircle className="w-4 h-4 text-red-400" />
+                <p className="text-sm text-red-400">{error}</p>
+              </div>
+            )}
+
+            {success && (
+              <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="space-y-3">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-neon-green/10 border border-neon-green/20">
+                  <CheckCircle className="w-4 h-4 text-neon-green" />
+                  <p className="text-sm text-neon-green font-medium">Bid placed! You are now leading!</p>
+                </div>
+                <Link 
+                  to="/leaderboard" 
+                  className="block text-center py-2 px-4 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-all text-sm font-bold"
+                >
+                  View Leaderboard
+                </Link>
+              </motion.div>
+            )}
+
+            <button type="submit" disabled={bidLoading || success} className="w-full btn-neon-green py-4 text-base font-bold" id="submit-bid">
+              {bidLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : success ? <><CheckCircle className="w-5 h-5" /> Done!</> : <><Zap className="w-5 h-5" /> Place Bid</>}
+            </button>
           </form>
-        </div>
-      </main>
+        </motion.div>
+      </div>
     </div>
   );
 };
 
 export default PlaceBid;
-
-

@@ -61,6 +61,7 @@ auctionItemSchema.index({ status: 1, endDate: -1 });
 auctionItemSchema.index({ category: 1, status: 1 });
 auctionItemSchema.index({ currentBid: 1 });
 auctionItemSchema.index({ title: 'text', description: 'text' });
+auctionItemSchema.index({ createdBy: 1 }); // Optimize "my auctions" queries
 
 /**
  * Virtual Definition: Synchronized expiration status

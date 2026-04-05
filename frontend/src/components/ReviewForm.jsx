@@ -1,75 +1,82 @@
 import { useState } from 'react';
-import { useReviews } from '../context/ReviewContext';
-import { useToast } from '../context/ToastContext';
+import { motion } from 'framer-motion';
+import { Star, Send, Loader2 } from 'lucide-react';
 
-const ReviewForm = ({ auctionId, onSubmit }) => {
-  const [rating, setRating] = useState(5);
+const ReviewForm = ({ onSubmit, loading = false }) => {
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
   const [feedback, setFeedback] = useState('');
-  const { createReview, loading } = useReviews();
-  const { addToast } = useToast();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (!feedback.trim()) {
-      addToast('Please provide feedback for your review', 'warning');
-      return;
-    }
-
-    try {
-      await createReview({ rating, feedback, auctionId });
-      addToast('Review submitted successfully!', 'success');
-      setRating(5);
-      setFeedback('');
-      if (onSubmit) onSubmit();
-    } catch (error) {
-      addToast(error.response?.data?.message || 'Failed to submit review', 'error');
-    }
+    if (rating === 0 || !feedback.trim()) return;
+    onSubmit({ rating, feedback });
+    setRating(0);
+    setFeedback('');
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-[#1A1A1A] backdrop-blur-xl border border-[#D4AF37]/20 rounded-2xl shadow-2xl p-6">
-      <h3 className="text-2xl font-bold text-[#F7F7F7] mb-6 tracking-wide">Leave a Review</h3>
-      
-      <div className="mb-6">
-        <label className="block text-lg font-bold text-[#F7F7F7] mb-3 tracking-wide">
-          RATING *
-        </label>
-        <div className="flex items-center space-x-2">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Star Rating */}
+      <div>
+        <label className="block text-sm text-text-secondary mb-2">Rating</label>
+        <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((star) => (
-            <button
+            <motion.button
               key={star}
               type="button"
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => setRating(star)}
-              className="text-3xl focus:outline-none"
+              onMouseEnter={() => setHoverRating(star)}
+              onMouseLeave={() => setHoverRating(0)}
+              className="p-1 transition-colors"
             >
-              {star <= rating ? '★' : '☆'}
-            </button>
+              <Star
+                className={`w-6 h-6 transition-all duration-200 ${
+                  star <= (hoverRating || rating)
+                    ? 'fill-gold text-gold drop-shadow-[0_0_6px_rgba(250,204,21,0.5)]'
+                    : 'text-text-muted'
+                }`}
+              />
+            </motion.button>
           ))}
-          <span className="ml-3 text-lg text-[#D4AF37] font-bold">{rating}/5</span>
+          {rating > 0 && (
+            <span className="ml-2 text-sm text-gold font-medium self-center">
+              {rating}/5
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="mb-6">
-        <label className="block text-lg font-bold text-[#F7F7F7] mb-3 tracking-wide">
-          YOUR FEEDBACK *
-        </label>
+      {/* Feedback */}
+      <div>
+        <label className="block text-sm text-text-secondary mb-2">Feedback</label>
         <textarea
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
           placeholder="Share your experience with this auction..."
-          required
-          rows={4}
-          className="w-full px-6 py-4 bg-[#0D0D0D] border-2 border-[#D4AF37]/30 rounded-xl text-[#F7F7F7] text-lg focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 transition-all duration-300 resize-none"
+          rows={3}
+          className="glass-input resize-none"
+          id="review-feedback"
         />
       </div>
 
+      {/* Submit */}
       <button
         type="submit"
-        disabled={loading}
-        className="w-full px-8 py-4 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] rounded-xl font-bold text-lg tracking-wider hover:from-[#B8860B] hover:to-[#D4AF37] transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] disabled:opacity-50"
+        disabled={loading || rating === 0 || !feedback.trim()}
+        className="btn-gold-outline w-full"
+        id="submit-review-btn"
       >
-        {loading ? 'SUBMITTING...' : 'SUBMIT REVIEW'}
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <>
+            <Send className="w-4 h-4" />
+            Submit Review
+          </>
+        )}
       </button>
     </form>
   );

@@ -1,63 +1,45 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useItems } from '../context/ItemContext';
 import { useToast } from '../context/ToastContext';
-import { 
-  HiOutlinePencilSquare, 
-  HiOutlineCube, 
-  HiOutlineCurrencyDollar, 
-  HiOutlineTag, 
-  HiOutlinePhoto, 
-  HiOutlineCalendarDays, 
-  HiOutlineCheckCircle, 
-  HiOutlineXMark,
-  HiOutlineArrowPath
-} from 'react-icons/hi2';
+import { Edit, Image, Tag, DollarSign, Calendar, FileText, Loader2, ArrowLeft } from 'lucide-react';
+
+const CATEGORIES = ['Electronics', 'Art', 'Jewelry', 'Vehicles', 'Fashion', 'Collectibles', 'Sports', 'Books', 'Music', 'Home', 'Other'];
 
 const UpdateItem = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { fetchItemById, updateItem } = useItems();
+  const { fetchItemById, updateItem, loading } = useItems();
   const { addToast } = useToast();
-
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    startingPrice: '',
-    category: '',
-    image: '',
-    endDate: '',
-    status: 'active'
+    title: '', description: '', startingPrice: '', category: '', image: '', endDate: '', status: 'active'
   });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
-    loadItem();
+    const load = async () => {
+      try {
+        const response = await fetchItemById(id);
+        const item = response.item;
+        setFormData({
+          title: item.title || '',
+          description: item.description || '',
+          startingPrice: item.startingPrice || '',
+          category: item.category || '',
+          image: item.image || '',
+          endDate: item.endDate ? new Date(item.endDate).toISOString().slice(0, 16) : '',
+          status: item.status || 'active',
+        });
+      } catch (err) {
+        addToast('Failed to load item', 'error');
+        navigate(-1);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+    load();
   }, [id]);
-
-  const loadItem = async () => {
-    try {
-      setFetchLoading(true);
-      const response = await fetchItemById(id);
-      const item = response.item;
-      
-      setFormData({
-        title: item.title,
-        description: item.description,
-        startingPrice: item.startingPrice,
-        category: item.category,
-        image: item.image,
-        endDate: new Date(item.endDate).toISOString().slice(0, 16),
-        status: item.status
-      });
-    } catch (error) {
-      setError('Failed to retrieve asset nomenclature.');
-    } finally {
-      setFetchLoading(false);
-    }
-  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -65,203 +47,109 @@ const UpdateItem = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
     try {
-      await updateItem(id, formData);
-      addToast('Asset parameters updated successfully.', 'success');
+      await updateItem(id, {
+        ...formData,
+        startingPrice: parseFloat(formData.startingPrice),
+      });
+      addToast('Auction updated successfully!', 'success');
       navigate(`/items/${id}`);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to re-initialize asset parameters.';
-      setError(msg);
-      addToast(msg, 'error');
-    } finally {
-      setLoading(false);
+      addToast(err.response?.data?.message || 'Failed to update', 'error');
     }
   };
 
-  const categories = [
-    'Horology', 'Fine Art', 'Real Estate', 'Blue Chip Collectibles', 
-    'Jewelry & Gems', 'Antiques', 'Couture', 'Automotive'
-  ];
-
-  if (fetchLoading) {
+  if (pageLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
-        <div className="text-[10px] text-[#D4AF37] font-black tracking-[0.5em] uppercase animate-pulse">
-          Retrieving Asset Parameters...
-        </div>
+      <div className="page-container flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-gold animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] py-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        
-        <header className="mb-16 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-full text-[#D4AF37] text-[10px] font-black tracking-[0.3em] uppercase mb-8">
-            <HiOutlineArrowPath className="text-sm" />
-            Parameter Modification Protocol
+    <div className="page-container" id="update-item-page">
+      <div className="section-container max-w-2xl">
+        <button onClick={() => navigate(-1)} className="btn-ghost mb-6 text-sm">
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-8 relative overflow-hidden"
+        >
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
+
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-xl bg-neon-purple-dim flex items-center justify-center">
+              <Edit className="w-6 h-6 text-neon-purple" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-text-primary">Update Auction</h1>
+              <p className="text-sm text-text-muted">Modify your listing details</p>
+            </div>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight mb-6">
-            Refine <span className="text-[#D4AF37]">Selection</span>
-          </h1>
-          <p className="max-w-xl mx-auto text-white/40 text-xs font-black tracking-widest uppercase leading-loose">
-            Optimization of existing holdings ensure maximum acquisition potential.
-          </p>
-        </header>
 
-        <section className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 blur-[100px] pointer-events-none" />
-          
-          {error && (
-            <div className="mb-10 p-5 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4 text-red-500 text-[10px] font-black tracking-widest uppercase text-center">
-              <HiOutlineXMark className="text-lg" />
-              {error}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm text-text-secondary mb-2" htmlFor="edit-title">Title</label>
+              <input type="text" id="edit-title" name="title" value={formData.title} onChange={handleChange} required className="glass-input" />
             </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="space-y-10">
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                  <HiOutlinePencilSquare /> Asset Title
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
-                />
+            <div>
+              <label className="block text-sm text-text-secondary mb-2" htmlFor="edit-desc">Description</label>
+              <textarea id="edit-desc" name="description" value={formData.description} onChange={handleChange} required rows={4} className="glass-input resize-none" />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-text-secondary mb-2" htmlFor="edit-price">Starting Price</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gold font-bold">$</span>
+                  <input type="number" id="edit-price" name="startingPrice" value={formData.startingPrice} onChange={handleChange} required min="0" step="0.01" className="glass-input pl-8" />
+                </div>
               </div>
-
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                  <HiOutlineTag /> Classification
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
-                >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat} className="bg-[#0D0D0D]">{cat}</option>
-                  ))}
+              <div>
+                <label className="block text-sm text-text-secondary mb-2" htmlFor="edit-category">Category</label>
+                <select id="edit-category" name="category" value={formData.category} onChange={handleChange} required className="glass-input">
+                  {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                <HiOutlineCube /> Asset Intelligence
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                required
-                rows={5}
-                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest leading-loose uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
-              />
+            <div>
+              <label className="block text-sm text-text-secondary mb-2" htmlFor="edit-image">Image URL</label>
+              <input type="url" id="edit-image" name="image" value={formData.image} onChange={handleChange} className="glass-input" />
+              {formData.image && (
+                <div className="mt-3 glass-card overflow-hidden">
+                  <img src={formData.image} alt="Preview" className="w-full h-40 object-cover" onError={(e) => e.target.style.display = 'none'} />
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                  <HiOutlineCurrencyDollar /> Reserve Price (USD)
-                </label>
-                <input
-                  type="number"
-                  name="startingPrice"
-                  value={formData.startingPrice}
-                  onChange={handleChange}
-                  required
-                  min="0"
-                  step="0.01"
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-text-secondary mb-2" htmlFor="edit-enddate">End Date</label>
+                <input type="datetime-local" id="edit-enddate" name="endDate" value={formData.endDate} onChange={handleChange} required className="glass-input" />
               </div>
-
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                  <HiOutlineCalendarDays /> Auction Termination
-                </label>
-                <input
-                  type="datetime-local"
-                  name="endDate"
-                  value={formData.endDate}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                  <HiOutlinePhoto /> Asset Visualization URL
-                </label>
-                <input
-                  type="url"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleChange}
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
-                />
-              </div>
-
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase">
-                  <HiOutlineArrowPath /> Listing Status
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-black tracking-widest uppercase focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all outline-none"
-                >
-                  <option value="active" className="bg-[#0D0D0D]">Active</option>
-                  <option value="closed" className="bg-[#0D0D0D]">Terminated</option>
+              <div>
+                <label className="block text-sm text-text-secondary mb-2" htmlFor="edit-status">Status</label>
+                <select id="edit-status" name="status" value={formData.status} onChange={handleChange} className="glass-input">
+                  <option value="active">Active</option>
+                  <option value="closed">Closed</option>
                 </select>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-6 pt-6">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 px-10 py-5 bg-[#D4AF37] text-[#0D0D0D] rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:bg-white transition-all flex items-center justify-center gap-3 shadow-2xl disabled:opacity-50"
-              >
-                {loading ? 'Processing...' : (
-                  <>
-                    <HiOutlineCheckCircle className="text-lg" />
-                    Synchronize Modification
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="px-10 py-5 bg-white/5 border border-white/10 text-white/40 rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all flex items-center justify-center"
-              >
-                Revert Protocol
-              </button>
-            </div>
+            <button type="submit" disabled={loading} className="w-full btn-gold py-4 text-base" id="update-item-btn">
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Edit className="w-5 h-5" /> Update Auction</>}
+            </button>
           </form>
-        </section>
+        </motion.div>
       </div>
     </div>
   );
 };
 
-
 export default UpdateItem;
-

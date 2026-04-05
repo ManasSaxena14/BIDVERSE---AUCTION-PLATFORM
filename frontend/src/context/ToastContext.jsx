@@ -13,26 +13,36 @@ export const useToast = () => {
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = (message, type = 'info') => {
+  const addToast = (message, type = 'info', duration = 5000) => {
     const id = Date.now() + Math.random();
-    const newToast = { id, message, type };
+    const newToast = { id, message, type, duration };
     
     setToasts(prev => [...prev, newToast]);
     
-    
+    // Auto-remove after duration
     setTimeout(() => {
       removeToast(id);
-    }, 5000);
+    }, duration);
   };
 
   const removeToast = (id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
+  // Convenience methods for different toast types
+  const success = (message, duration = 5000) => addToast(message, 'success', duration);
+  const error = (message, duration = 6000) => addToast(message, 'error', duration);
+  const info = (message, duration = 4000) => addToast(message, 'info', duration);
+  const warning = (message, duration = 5000) => addToast(message, 'warning', duration);
+
   const value = {
     toasts,
     addToast,
-    removeToast
+    removeToast,
+    success,
+    error,
+    info,
+    warning
   };
 
   return (

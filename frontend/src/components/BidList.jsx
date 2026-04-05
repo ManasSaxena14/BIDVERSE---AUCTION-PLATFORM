@@ -1,123 +1,100 @@
-import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
+import { Crown, TrendingUp, User } from 'lucide-react';
+import { format } from 'date-fns';
 
-const BidList = ({ bids, onUpdate, onDelete }) => {
-  const { user } = useAuth();
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
+const BidList = ({ bids = [], showItem = false }) => {
   if (!bids || bids.length === 0) {
     return (
-      <div className="text-center py-8 text-[#E5E4E2]/70">
-        <p className="text-lg tracking-wide">No bids placed yet. Be the first to bid!</p>
+      <div className="text-center py-12">
+        <TrendingUp className="w-10 h-10 text-text-muted mx-auto mb-3" />
+        <p className="text-text-secondary">No bids placed yet</p>
+        <p className="text-sm text-text-muted">Be the first to bid!</p>
       </div>
     );
   }
 
+  const sortedBids = [...bids].sort((a, b) => b.amount - a.amount);
+  const highestBidId = sortedBids[0]?._id;
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-2xl font-bold text-[#F7F7F7] mb-6 tracking-wide">ALL BIDS ({bids.length})</h3>
-      
-      {bids.map((bid, index) => {
-        const isOwner = user && bid.user._id === user.id;
-        const isSuperAdmin = user && user.role === 'superadmin';
-        const canModify = isOwner || isSuperAdmin;
+    <div className="space-y-2">
+      {sortedBids.map((bid, index) => {
+        const isHighest = bid._id === highestBidId;
+        const isTop3 = index < 3;
+
+        const rankColors = {
+          0: 'text-gold border-gold/20 bg-gold-50',
+          1: 'text-slate-300 border-slate-400/20 bg-slate-800/30',
+          2: 'text-amber-600 border-amber-700/20 bg-amber-900/20',
+        };
 
         return (
-          <div
+          <motion.div
             key={bid._id}
-            className={`p-6 rounded-2xl border-2 backdrop-blur-xl transition-all duration-300 ${
-              index === 0
-                ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0D0D0D] shadow-lg scale-[1.02]'
-                : index === 1
-                ? 'bg-gradient-to-r from-gray-300 to-gray-400 text-gray-900'
-                : index === 2
-                ? 'bg-gradient-to-r from-orange-300 to-yellow-600 text-white'
-                : 'bg-[#0D0D0D] border border-[#D4AF37]/20'
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            className={`flex items-center gap-4 p-3 rounded-xl transition-all duration-200 hover:bg-white/3 ${
+              isHighest ? 'glass-card border-gold/15' : 'border border-transparent'
             }`}
           >
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <span className={`text-2xl font-extrabold ${
-                    index === 0 ? 'text-[#0D0D0D]' :
-                    index === 1 ? 'text-gray-900' :
-                    index === 2 ? 'text-white' :
-                    'text-[#D4AF37]'
-                  }`}>
-                    {index < 3 ? (
-                      index === 0 ? '🥇' : 
-                      index === 1 ? '🥈' : 
-                      '🥉'
-                    ) : `#${index + 1}`}
-                  </span>
-                  <span className={`text-2xl font-extrabold ${
-                    index === 0 ? 'text-[#0D0D0D]' :
-                    index === 1 ? 'text-gray-900' :
-                    index === 2 ? 'text-white' :
-                    'text-[#D4AF37]'
-                  }`}>
-                    ${bid.amount.toLocaleString()}
-                  </span>
-                  {index === 0 && (
-                    <span className="text-xs bg-[#0D0D0D] text-[#D4AF37] px-3 py-1 rounded-full font-bold tracking-wider">
-                      HIGHEST BID
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm mt-2 font-medium">
-                  by <span className={`font-bold ${
-                    index === 0 ? 'text-[#0D0D0D]' :
-                    index === 1 ? 'text-gray-900' :
-                    index === 2 ? 'text-white' :
-                    'text-[#F7F7F7]'
-                  }`}>{bid.user.name}</span>
-                </p>
-                <p className={`text-xs mt-1 ${
-                  index === 0 ? 'text-[#0D0D0D]/80' :
-                  index === 1 ? 'text-gray-900/80' :
-                  index === 2 ? 'text-white/80' :
-                  'text-[#E5E4E2]/70'
-                }`}>{formatDate(bid.createdAt)}</p>
-              </div>
-
-              {canModify && (
-                <div className="flex gap-2">
-                  {onUpdate && (
-                    <button
-                      onClick={() => onUpdate(bid)}
-                      className={`px-4 py-2 rounded-xl font-bold tracking-wider transition-all duration-300 ${
-                        index === 0
-                          ? 'bg-[#0D0D0D] text-[#D4AF37] border border-[#0D0D0D] hover:bg-[#D4AF37] hover:text-[#0D0D0D]'
-                          : 'bg-[#1A1A1A] border border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0D0D0D]'
-                      }`}
-                    >
-                      UPDATE
-                    </button>
-                  )}
-                  {onDelete && (
-                    <button
-                      onClick={() => onDelete(bid._id)}
-                      className={`px-4 py-2 rounded-xl font-bold tracking-wider transition-all duration-300 ${
-                        index === 0
-                          ? 'bg-[#0D0D0D] text-red-500 border border-[#0D0D0D] hover:bg-red-500 hover:text-[#0D0D0D]'
-                          : 'bg-[#1A1A1A] border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-[#0D0D0D]'
-                      }`}
-                    >
-                      DELETE
-                    </button>
-                  )}
-                </div>
+            {/* Rank */}
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border ${
+              isTop3 ? rankColors[index] : 'text-text-muted border-glass-border bg-white/3'
+            }`}>
+              {isHighest ? (
+                <Crown className="w-4 h-4" />
+              ) : (
+                `#${index + 1}`
               )}
             </div>
-          </div>
+
+            {/* Connector Line */}
+            <div className="hidden sm:flex flex-col items-center">
+              <div className={`w-2 h-2 rounded-full ${isHighest ? 'bg-gold' : 'bg-text-muted/30'}`} />
+              {index < sortedBids.length - 1 && (
+                <div className="w-px h-6 bg-glass-border" />
+              )}
+            </div>
+
+            {/* User Info */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                isHighest ? 'bg-gradient-gold' : 'bg-white/5 border border-glass-border'
+              }`}>
+                <span className={`text-xs font-bold ${isHighest ? 'text-bg-deep' : 'text-text-secondary'}`}>
+                  {bid.user?.name?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className={`text-sm font-medium truncate ${isHighest ? 'text-gold' : 'text-text-primary'}`}>
+                  {bid.user?.name || 'Anonymous'}
+                </p>
+                {bid.createdAt && (
+                  <p className="text-[10px] text-text-muted">
+                    {format(new Date(bid.createdAt), 'MMM d, h:mm a')}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Item (optional) */}
+            {showItem && bid.item && (
+              <div className="hidden md:block text-xs text-text-muted truncate max-w-32">
+                {bid.item.title}
+              </div>
+            )}
+
+            {/* Amount */}
+            <div className="text-right">
+              <p className={`text-sm font-bold font-display ${isHighest ? 'gradient-text-gold' : 'text-text-primary'}`}>
+                ${bid.amount?.toLocaleString()}
+              </p>
+              {isHighest && (
+                <span className="badge-gold text-[8px] py-0 px-1.5">HIGHEST</span>
+              )}
+            </div>
+          </motion.div>
         );
       })}
     </div>

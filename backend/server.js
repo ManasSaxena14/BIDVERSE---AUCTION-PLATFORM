@@ -78,6 +78,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/superadmin', require('./routes/superadminRoutes'));
 app.use('/api/commissions', require('./routes/commissionRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
 
 app.get('/', (req, res) => {
   res.json({

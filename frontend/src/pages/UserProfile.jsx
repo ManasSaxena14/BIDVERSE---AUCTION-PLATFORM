@@ -1,356 +1,247 @@
 import { useState, useEffect } from 'react';
-import { 
-  HiOutlineListBullet, 
-  HiOutlineBolt, 
-  HiOutlineTag, 
-  HiOutlineCurrencyDollar, 
-  HiOutlineUser, 
-  HiOutlineClock, 
-  HiOutlinePencilSquare, 
-  HiOutlineInboxStack,
-  HiOutlineShieldCheck,
-  HiOutlineArrowTrendingUp,
-  HiOutlineBriefcase,
-  HiOutlineIdentification,
-  HiOutlineCircleStack,
-  HiOutlineArrowRight
-} from 'react-icons/hi2';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { useItems } from '../context/ItemContext';
 import { useBids } from '../context/BidContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { useItems } from '../context/ItemContext';
+import GamificationBadge, { calculateBadges, calculateLevel } from '../components/GamificationBadge';
+import {
+  User, Mail, Shield, Edit, Gavel, TrendingUp, DollarSign,
+  Calendar, Award, ChevronRight, BarChart3, Clock
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const UserProfile = () => {
   const { user } = useAuth();
-  const { items, fetchItems } = useItems();
   const { bids, fetchBids } = useBids();
+  const { items, fetchItems } = useItems();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [myItems, setMyItems] = useState([]);
-  const [myBids, setMyBids] = useState([]);
-  const [stats, setStats] = useState({
-    totalBids: 0,
-    wonAuctions: 0,
-    activeBids: 0,
-    totalSpent: 0,
-    itemsListed: 0,
-    itemsSold: 0,
-    totalRevenue: 0
-  });
-
-  const navigate = useNavigate();
 
   useEffect(() => {
-    loadUserData();
+    Promise.all([
+      fetchBids({ user: user?.id, limit: 500 }),
+      fetchItems({ limit: 200 })
+    ]).catch(() => {}).finally(() => setLoading(false));
   }, [user]);
 
-  const loadUserData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([fetchItems({ limit: 100 }), fetchBids()]);
-    } catch (error) {
-      // Protocol synchronization failure logged
-    } finally {
-      setLoading(false);
-    }
+  const userBids = (bids || []).filter(b => (b.user?._id || b.user) === user?.id);
+  const userItems = (items || []).filter(i => i.createdBy?._id === user?.id || i.createdBy === user?.id);
+  const totalSpent = userBids.reduce((sum, b) => sum + (b.amount || 0), 0);
+  const highestBid = userBids.length > 0 ? Math.max(...userBids.map(b => b.amount || 0)) : 0;
+  const daysSinceJoin = user?.createdAt ? Math.floor((Date.now() - new Date(user.createdAt)) / 86400000) : 0;
+
+  const level = calculateLevel(userBids.length);
+  const badges = calculateBadges({
+    totalBids: userBids.length,
+    highestBid,
+    auctionsCreated: userItems.length,
+    daysSinceJoin,
+    rank: 999
+  });
+
+  // Chart Data - bids over time
+  const bidsByMonth = {};
+  userBids.forEach(b => {
+    const month = format(new Date(b.createdAt), 'MMM yyyy');
+    if (!bidsByMonth[month]) bidsByMonth[month] = { month, total: 0, count: 0 };
+    bidsByMonth[month].total += b.amount || 0;
+    bidsByMonth[month].count++;
+  });
+  const chartData = Object.values(bidsByMonth).slice(-6);
+
+  const roleBadge = {
+    superadmin: { label: 'Super Admin', class: 'badge-danger' },
+    auctioneer: { label: 'Auctioneer', class: 'badge-purple' },
+    bidder: { label: 'Bidder', class: 'badge-green' },
   };
 
-  useEffect(() => {
-    if (user && items.length > 0) {
-      calculateStats();
-    }
-  }, [user, items, bids]);
-
-  const calculateStats = () => {
-    try {
-      const userId = user.id || user._id;
-      const userItems = items.filter(item => item.createdBy?._id === userId);
-      setMyItems(userItems);
-
-      const userBids = bids.filter(bid => bid.user?._id === userId);
-      setMyBids(userBids);
-
-      setStats({
-        totalBids: userBids.length,
-        wonAuctions: 0,
-        activeBids: userBids.filter(bid => bid.item?.status === 'active').length,
-        totalSpent: userBids.reduce((sum, bid) => sum + (bid.amount || 0), 0),
-        itemsListed: userItems.length,
-        itemsSold: userItems.filter(item => item.status === 'sold').length,
-        totalRevenue: userItems.reduce((sum, item) => sum + (item.currentBid || 0), 0)
-      });
-    } catch (error) {
-      // Intelligence analysis error handling synchronized
-    }
-  };
-
-  const getBadgeColor = (role) => {
-    switch (role) {
-      case 'superadmin': return 'border-purple-500/50 text-purple-400 bg-purple-500/10';
-      case 'auctioneer': return 'border-[#D4AF37]/50 text-[#D4AF37] bg-[#D4AF37]/10';
-      case 'bidder': return 'border-white/20 text-white/40 bg-white/5';
-      default: return 'border-white/10 text-white/20 bg-white/5';
-    }
-  };
-
-  const isAuctionActive = (item) => {
-    if (!item) return false;
-    return item.status === 'active' && new Date(item.endDate) > new Date();
-  };
-
-  if (loading) {
+  const CustomTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0D0D0D] space-y-10">
-        <div className="w-12 h-12 border-t-2 border-[#D4AF37] rounded-full animate-spin shadow-[0_0_30px_rgba(212,175,55,0.2)]"></div>
-        <div className="text-[10px] text-[#D4AF37] font-black tracking-[0.6em] uppercase animate-pulse leading-none italic">Synchronizing Identity...</div>
+      <div className="glass-card p-3 text-xs">
+        <p className="text-text-primary font-medium">${payload[0].value?.toLocaleString()}</p>
+        <p className="text-text-muted">{payload[0].payload.count} bids</p>
       </div>
     );
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D]">
-      <header className="relative border-b border-white/5 py-40 bg-[#0A0A0A] overflow-hidden">
-        <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-[#D4AF37]/5 blur-[180px] pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-20">
-            <div className="relative group shrink-0">
-              <div className="w-48 h-48 rounded-[3rem] bg-black border border-white/5 flex items-center justify-center text-7xl text-white font-black group-hover:scale-105 transition-all duration-700 shadow-3xl relative overflow-hidden italic gold-shimmer-text">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20" />
-                <span className="relative z-10">{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
-              </div>
-              <div className="absolute -bottom-3 -right-3 bg-[#D4AF37] w-12 h-12 rounded-2xl border-[8px] border-[#0A0A0A] flex items-center justify-center shadow-xl">
-                <HiOutlineShieldCheck className="text-sm text-[#0D0D0D]" />
-              </div>
-            </div>
+    <div className="page-container" id="user-profile-page">
+      <div className="section-container">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left: Profile Card */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-1 space-y-6"
+          >
+            {/* Profile Info */}
+            <div className="glass-card p-6 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
 
-            <div className="flex-1 text-center lg:text-left space-y-8">
-              <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full border border-white/10 bg-white/5 text-white/40 text-[10px] font-black tracking-[0.4em] uppercase leading-none">
-                <HiOutlineIdentification className="text-sm text-[#D4AF37]" />
-                Authenticated Executive Identity Index
-              </div>
-              <div className="space-y-4">
-                <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter uppercase leading-none italic italic">
-                  {user?.name}
-                </h1>
-                <p className="text-[12px] text-white/20 font-black tracking-[0.3em] uppercase italic">{user?.email}</p>
-              </div>
-              
-              <div className="flex gap-6 justify-center lg:justify-start flex-wrap">
-                <span className={`px-6 py-3 rounded-2xl border text-[9px] font-black tracking-[0.4em] uppercase leading-none transition-all ${getBadgeColor(user?.role)}`}>
-                  Deployment: {user?.role}
-                </span>
-                <span className="px-6 py-3 rounded-2xl border border-white/5 bg-black/40 text-white/20 text-[9px] font-black tracking-[0.4em] uppercase leading-none italic">
-                  Registry Date: {user?.createdAt ? new Date(user.createdAt).getFullYear() : '2024'}
+              <div className="w-20 h-20 rounded-2xl bg-gradient-gold flex items-center justify-center mx-auto mb-4 shadow-glow-gold">
+                <span className="text-3xl font-bold text-bg-deep font-display">
+                  {user?.name?.charAt(0).toUpperCase()}
                 </span>
               </div>
-            </div>
 
-            <Link
-              to="/edit-profile"
-              className="px-12 py-6 bg-white/5 border border-white/10 text-white/40 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase hover:text-white hover:border-[#D4AF37]/50 transition-all shadow-2xl leading-none italic"
-            >
-              <HiOutlinePencilSquare className="text-sm inline-block mr-3" />
-              Refine Protocol
-            </Link>
-          </div>
-        </div>
-      </header>
+              <h2 className="text-xl font-bold text-text-primary">{user?.name}</h2>
+              <p className="text-sm text-text-muted flex items-center justify-center gap-1 mt-1">
+                <Mail className="w-3.5 h-3.5" /> {user?.email}
+              </p>
 
-      <section className="max-w-7xl mx-auto px-4 lg:px-8 -mt-20 relative z-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { id: 'bids', val: stats.totalBids, label: 'Bids Executed', icon: HiOutlineListBullet },
-            { id: 'active', val: stats.activeBids, label: 'Active Protocols', icon: HiOutlineBolt, color: 'text-green-500' },
-            { id: 'inventory', val: stats.itemsListed, label: 'Asset Holdings', icon: HiOutlineTag },
-            { id: 'revenue', val: `$${stats.totalRevenue.toLocaleString()}`, label: 'Portfolio Equity', icon: HiOutlineCurrencyDollar, color: 'text-[#D4AF37]' }
-          ].map((s, i) => (
-            <div key={i} className="bg-black/80 backdrop-blur-3xl p-12 rounded-[3.5rem] border border-white/5 shadow-[0_30px_100px_rgba(0,0,0,0.5)] space-y-8 group hover:border-[#D4AF37]/20 transition-all duration-700 hover:-translate-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/20 group-hover:text-[#D4AF37] group-hover:border-[#D4AF37]/40 transition-all duration-700">
-                <s.icon className="text-xl" />
+              <div className="mt-3">
+                <span className={roleBadge[user?.role]?.class}>
+                  <Shield className="w-3 h-3" />
+                  {roleBadge[user?.role]?.label}
+                </span>
               </div>
-              <div className="space-y-2">
-                <div className={`text-4xl font-black text-white tracking-tighter italic ${s.id === 'revenue' ? 'gold-shimmer-text' : ''}`}>{s.val}</div>
-                <div className="text-[10px] text-white/20 font-black tracking-[0.4em] uppercase italic leading-none">{s.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-40">
-        <nav className="flex gap-12 mb-24 flex-wrap border-b border-white/5 pb-12 overflow-x-auto whitespace-nowrap">
-          {['overview', 'myBids', 'myAuctions', 'activity'].map(tab => (
-            (tab !== 'myAuctions' || (user?.role === 'auctioneer' || user?.role === 'superadmin')) && (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`text-[11px] font-black tracking-[0.5em] transition-all duration-700 uppercase relative py-4 italic leading-none ${
-                  activeTab === tab ? 'text-[#D4AF37]' : 'text-white/10 hover:text-white/40'
-                }`}
-              >
-                {tab === 'overview' ? 'Intelligence' : 
-                 tab === 'myBids' ? 'Engagements' : 
-                 tab === 'myAuctions' ? 'Allocations' : 'Logistics'}
-                {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.5)]" />}
-              </button>
-            )
-          ))}
-        </nav>
-
-        <section className="max-w-6xl mx-auto">
-          {activeTab === 'overview' && (
-            <div className="bg-white/5 backdrop-blur-3xl p-16 md:p-24 rounded-[4rem] border border-white/5 shadow-2xl space-y-24 relative overflow-hidden transition-all duration-1000 animate-fadeInUp">
-               <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#D4AF37]/5 blur-[160px] pointer-events-none" />
-               <header className="space-y-4 text-center md:text-left">
-                <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic">Institutional Summary</h2>
-                <div className="w-24 h-px bg-[#D4AF37]/30" />
-               </header>
-               
-               <div className="grid md:grid-cols-2 gap-24">
-                <div className="space-y-12">
-                  <header className="flex items-center gap-4 text-[#D4AF37]">
-                    <HiOutlineArrowTrendingUp className="text-xl" />
-                    <h3 className="text-[11px] font-black text-white/40 tracking-[0.4em] uppercase leading-none">Acquisition Intelligence</h3>
-                  </header>
-                  <div className="space-y-10">
-                    <div className="flex justify-between items-end border-b border-white/5 pb-6 group">
-                      <span className="text-[10px] font-black text-white/10 uppercase tracking-[0.3em] group-hover:text-white/30 transition-colors">Aggregate Bid Proposals</span>
-                      <span className="text-3xl font-black text-white italic group-hover:scale-110 transition-transform">{stats.totalBids}</span>
-                    </div>
-                    <div className="flex justify-between items-end border-b border-white/5 pb-6 group">
-                      <span className="text-[10px] font-black text-white/10 uppercase tracking-[0.3em] group-hover:text-white/30 transition-colors">Cumulative Capitalized Flux</span>
-                      <span className="text-3xl font-black text-[#D4AF37] italic group-hover:scale-110 transition-transform gold-shimmer-text">${stats.totalSpent.toLocaleString()}</span>
-                    </div>
-                  </div>
+              {/* Level */}
+              <div className="mt-6 glass-card p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-sm font-semibold ${level.color}`}>{level.name}</span>
+                  <span className="text-xs text-text-muted">Level {level.level}</span>
                 </div>
-                {(user?.role === 'auctioneer' || user?.role === 'superadmin') && (
-                  <div className="space-y-12 border-l border-white/5 pl-24 hidden md:block">
-                    <header className="flex items-center gap-4 text-[#D4AF37]">
-                      <HiOutlineBriefcase className="text-xl" />
-                      <h3 className="text-[11px] font-black text-white/40 tracking-[0.4em] uppercase leading-none">Managed Allocation Analysis</h3>
-                    </header>
-                    <div className="space-y-10">
-                      <div className="flex justify-between items-end border-b border-white/5 pb-6 group">
-                        <span className="text-[10px] font-black text-white/10 uppercase tracking-[0.3em] group-hover:text-white/30 transition-colors">Assets Registered</span>
-                        <span className="text-3xl font-black text-white italic group-hover:scale-110 transition-transform">{stats.itemsListed}</span>
-                      </div>
-                      <div className="flex justify-between items-end border-b border-white/5 pb-6 group">
-                        <span className="text-[10px] font-black text-white/10 uppercase tracking-[0.3em] group-hover:text-white/30 transition-colors">Liquidations Finalized</span>
-                        <span className="text-3xl font-black text-[#D4AF37] italic group-hover:scale-110 transition-transform gold-shimmer-text">{stats.itemsSold}</span>
-                      </div>
-                    </div>
+                {level.next && (
+                  <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-gold rounded-full transition-all duration-500"
+                      style={{ width: `${(level.xp / level.next) * 100}%` }}
+                    />
                   </div>
                 )}
+                <p className="text-[10px] text-text-dim mt-1">
+                  {level.next ? `${level.xp}/${level.next} XP to next level` : 'Max level reached!'}
+                </p>
               </div>
-            </div>
-          )}
 
-          {activeTab === 'myBids' && (
-            <div className="grid md:grid-cols-1 gap-10 animate-fadeInUp">
-              {myBids.length > 0 ? myBids.map((bid) => (
-                <article key={bid._id} className="bg-white/5 p-12 rounded-[3.5rem] border border-white/5 hover:border-[#D4AF37]/30 transition-all duration-700 group relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-12 shadow-2xl">
-                   <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 blur-[80px] pointer-events-none group-hover:bg-[#D4AF37]/10 transition-colors" />
-                   <div className="flex-1 space-y-10 relative z-10">
-                      <div className="space-y-4">
-                        <div className="text-[10px] text-[#D4AF37] font-black tracking-[0.4em] uppercase italic leading-none">{bid.item?.category || 'General Index'}</div>
-                        <h3 className="text-3xl font-black text-white uppercase tracking-tighter group-hover:text-[#D4AF37] transition-colors leading-none italic">
-                          {bid.item?.title || 'Classified Asset'}
-                        </h3>
-                      </div>
-                      <div className="flex gap-20">
-                        <div className="space-y-2">
-                          <div className="text-[9px] text-white/20 uppercase font-black tracking-[0.3em] leading-none">Proposal Valuation</div>
-                          <div className="text-4xl font-black text-white tracking-tighter italic group-hover:gold-shimmer-text transition-all">${bid.amount.toLocaleString()}</div>
-                        </div>
-                        <div className="space-y-2 border-l border-white/5 pl-12">
-                          <div className="text-[9px] text-white/20 uppercase font-black tracking-[0.3em] leading-none">Authorization Date</div>
-                          <div className="text-[14px] font-black text-white/60 uppercase tracking-widest leading-none mt-2">{new Date(bid.createdAt).toLocaleDateString().toUpperCase()}</div>
-                        </div>
-                      </div>
-                   </div>
-                   <footer className="flex flex-col sm:flex-row gap-6 relative z-10 shrink-0">
-                      <Link to={`/items/${bid.item?._id}`} className="px-12 py-5 bg-white/5 border border-white/10 text-white/40 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase hover:text-white hover:border-[#D4AF37]/40 transition-all leading-none italic">Analysis Index</Link>
-                      {isAuctionActive(bid.item) && (
-                        <Link to={`/update-bid/${bid._id}`} className="px-12 py-5 bg-[#D4AF37] text-[#0D0D0D] rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase shadow-2xl hover:bg-white transition-all leading-none italic flex items-center gap-3">
-                          <HiOutlineArrowTrendingUp className="text-sm" />
-                          Escalate Proposal
-                        </Link>
-                      )}
-                   </footer>
-                </article>
-              )) : (
-                <div className="text-center py-48 bg-white/5 border border-dashed border-white/10 rounded-[4rem] space-y-12 backdrop-blur-3xl">
-                  <HiOutlineInboxStack className="text-8xl mx-auto text-white/5" />
-                  <div className="space-y-6">
-                    <h2 className="text-3xl font-black text-white/20 tracking-[0.4em] uppercase leading-none italic">Pool Data Void</h2>
-                    <Link to="/" className="inline-flex items-center gap-4 text-[11px] text-[#D4AF37] font-black uppercase tracking-[0.4em] hover:text-white transition-all leading-none italic">
-                      Initialize Acquisition Protocol <HiOutlineArrowRight />
-                    </Link>
-                  </div>
+              <Link to="/edit-profile" className="btn-gold-outline w-full mt-4">
+                <Edit className="w-4 h-4" /> Edit Profile
+              </Link>
+            </div>
+
+            {/* Badges */}
+            <div className="glass-card p-6">
+              <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4">Badges</h3>
+              {badges.length === 0 ? (
+                <p className="text-xs text-text-muted text-center py-4">No badges earned yet. Start bidding!</p>
+              ) : (
+                <div className="flex flex-wrap gap-3 justify-center">
+                  {badges.map((badgeId) => (
+                    <GamificationBadge key={badgeId} badgeId={badgeId} size="md" />
+                  ))}
                 </div>
               )}
             </div>
-          )}
+          </motion.div>
 
-          {activeTab === 'myAuctions' && (
-            <div className="grid md:grid-cols-2 gap-12 animate-fadeInUp">
-              {myItems.map((item) => (
-                <Link to={`/items/${item._id}`} key={item._id} className="bg-white/5 rounded-[4rem] border border-white/5 overflow-hidden hover:border-[#D4AF37]/40 transition-all duration-1000 group shadow-[0_30px_100px_rgba(0,0,0,0.5)] flex flex-col">
-                  <div className="h-64 bg-[#050505] flex items-center justify-center border-b border-white/5 relative overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-1000">
-                    <img src={item.image} alt={item.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                    <HiOutlineIdentification className="absolute top-8 left-8 text-white/20 text-2xl group-hover:text-[#D4AF37] transition-all" />
+          {/* Right: Stats & Activity */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="lg:col-span-2 space-y-6"
+          >
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { icon: Gavel, label: 'Total Bids', value: userBids.length, color: 'text-neon-green' },
+                { icon: DollarSign, label: 'Total Spent', value: `$${totalSpent.toLocaleString()}`, color: 'text-gold' },
+                { icon: TrendingUp, label: 'Highest Bid', value: `$${highestBid.toLocaleString()}`, color: 'text-neon-purple' },
+                { icon: BarChart3, label: 'Auctions', value: userItems.length, color: 'text-neon-cyan' },
+              ].map((stat, i) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={i} className="glass-card p-4">
+                    <Icon className={`w-5 h-5 ${stat.color} mb-2`} />
+                    <p className="text-xs text-text-muted">{stat.label}</p>
+                    <p className="text-lg font-bold text-text-primary font-display">{stat.value}</p>
                   </div>
-                  <div className="p-12 space-y-12 flex-1 flex flex-col justify-between">
-                    <div className="space-y-4">
-                      <div className="text-[10px] text-[#D4AF37]/60 font-black tracking-[0.4em] uppercase italic leading-none">{item.category}</div>
-                      <h3 className="text-2xl font-black text-white uppercase tracking-tighter line-clamp-2 leading-tight italic">{item.title}</h3>
-                    </div>
-                    <div className="flex justify-between items-end border-t border-white/5 pt-10">
-                      <div className="space-y-2">
-                        <div className="text-[10px] text-white/10 uppercase font-black tracking-[0.3em] leading-none">Net Benchmark</div>
-                        <div className="text-4xl font-black text-white tracking-tighter italic group-hover:gold-shimmer-text transition-all">${item.currentBid.toLocaleString()}</div>
-                      </div>
-                      <div className={`px-5 py-2.5 rounded-2xl text-[9px] font-black tracking-[0.4em] uppercase border backdrop-blur-xl ${
-                        item.status === 'active' ? 'bg-[#D4AF37] text-[#0D0D0D] border-[#D4AF37] shadow-xl' : 'bg-black border-white/5 text-white/20'
-                      }`}>
-                        {item.status.toUpperCase()}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
-          )}
 
-          {activeTab === 'activity' && (
-            <div className="space-y-8 animate-fadeInUp max-w-4xl mx-auto">
-               <header className="mb-12 border-l border-[#D4AF37] pl-10">
-                  <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic leading-none">Executive Audit Trail</h2>
-                  <p className="text-[10px] text-white/20 font-black tracking-[0.3em] uppercase mt-4 italic leading-none">Sub-Millisecond Execution Integrity Log</p>
-               </header>
-              {myBids.slice(0, 10).map((bid, i) => (
-                <div key={i} className="flex items-center gap-12 p-10 bg-white/5 rounded-[2.5rem] border border-white/5 group hover:border-[#D4AF37]/30 transition-all duration-700 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 blur-[40px] pointer-events-none" />
-                  <div className="w-16 h-16 shrink-0 rounded-2xl bg-black border border-white/10 flex items-center justify-center text-white/10 group-hover:text-[#D4AF37] group-hover:border-[#D4AF37]/40 group-hover:scale-110 transition-all duration-700 shadow-2xl relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-10" />
-                    <HiOutlineClock className="text-2xl relative z-10" />
-                  </div>
-                  <div className="flex-1 space-y-4 relative z-10">
-                    <div className="flex justify-between items-center">
-                       <div className="text-[10px] text-white/10 font-black tracking-[0.5em] uppercase leading-none italic">Protocol Sequence Recognized</div>
-                       <div className="text-[9px] text-white/20 font-black italic">{new Date(bid.createdAt).toLocaleTimeString()}</div>
-                    </div>
-                    <p className="text-[13px] font-black text-white/40 uppercase tracking-widest leading-relaxed">
-                      Proposal of <span className="text-[#D4AF37] italic font-black">${bid.amount.toLocaleString()}</span> authored for <span className="text-white italic">{bid.item?.title || 'Classified Portfolio Asset'}</span>
-                    </p>
-                  </div>
+            {/* Bid Activity Chart */}
+            {chartData.length > 0 && (
+              <div className="glass-card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Bid Activity</h3>
+                  <span className="badge-gold text-xs">{userBids.length} Total Bids</span>
                 </div>
-              ))}
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#FACC15" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#FACC15" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                    <XAxis 
+                      dataKey="month" 
+                      tick={{ fill: '#94A3B8', fontSize: 11 }} 
+                      axisLine={{ stroke: 'rgba(255,255,255,0.05)' }}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      tick={{ fill: '#94A3B8', fontSize: 11 }} 
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(value) => `$${value >= 1000 ? `${(value/1000).toFixed(0)}k` : value}`}
+                    />
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(250, 204, 21, 0.2)', strokeWidth: 1 }} />
+                    <Area 
+                      type="monotone" 
+                      dataKey="total" 
+                      stroke="#FACC15" 
+                      fill="url(#goldGradient)" 
+                      strokeWidth={3}
+                      dot={{ fill: '#FACC15', r: 4, strokeWidth: 2, stroke: '#000' }}
+                      activeDot={{ fill: '#FACC15', r: 6, strokeWidth: 2, stroke: '#000', filter: 'drop-shadow(0 0 8px rgba(250, 204, 21, 0.6))' }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Recent Bids */}
+            <div className="glass-card p-6">
+              <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4">Recent Bids</h3>
+              {userBids.length === 0 ? (
+                <p className="text-sm text-text-muted text-center py-8">No bids placed yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {userBids.slice(0, 10).map((bid, i) => (
+                    <Link
+                      key={bid._id}
+                      to={`/items/${bid.item?._id || bid.item}`}
+                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/3 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-gold-100 flex items-center justify-center">
+                        <Gavel className="w-4 h-4 text-gold" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-text-primary truncate group-hover:text-gold transition-colors">
+                          {bid.item?.title || 'Auction Item'}
+                        </p>
+                        <p className="text-[10px] text-text-muted">
+                          {bid.createdAt ? format(new Date(bid.createdAt), 'MMM d, yyyy h:mm a') : ''}
+                        </p>
+                      </div>
+                      <span className="text-sm font-bold gradient-text-gold font-display">
+                        ${bid.amount?.toLocaleString()}
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-text-muted" />
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </section>
-      </main>
+          </motion.div>
+        </div>
+      </div>
     </div>
   );
 };
