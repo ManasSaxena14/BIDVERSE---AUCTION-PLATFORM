@@ -61,12 +61,12 @@ function App() {
                       <Route path="/" element={<Home />} />
                       <Route path="/signup" element={<Signup />} />
                       <Route path="/login" element={<Login />} />
-                      <Route path="/items/:id" element={<ItemDetails />} />
+                      <Route path="/items/:id" element={<ProtectedRoute><ItemDetails /></ProtectedRoute>} />
                       <Route path="/about" element={<About />} />
                       <Route path="/how-it-works" element={<HowItWorks />} />
                       <Route path="/categories" element={<Categories />} />
                       <Route path="/leaderboard" element={<Leaderboard />} />
-                      <Route path="/auction/:id" element={<ViewAuctionDetails />} />
+                      <Route path="/auction/:id" element={<ProtectedRoute><ViewAuctionDetails /></ProtectedRoute>} />
                       <Route path="/category/:categoryName" element={<CategoryItems />} />
 
                       <Route path="/create-item" element={<ProtectedRoute roles={['auctioneer', 'superadmin']}><CreateItem /></ProtectedRoute>} />
