@@ -32,6 +32,9 @@ const ParticleBackground = ({ particleCount = 40, className = '' }) => {
     }));
 
     const animate = () => {
+      animFrameRef.current = requestAnimationFrame(animate);
+      if (document.hidden) return; // Save CPU when tab is inactive
+
       ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
       particles.forEach((p) => {
         p.x += p.speedX;
@@ -46,7 +49,6 @@ const ParticleBackground = ({ particleCount = 40, className = '' }) => {
         ctx.fillStyle = `${p.color}${p.opacity})`;
         ctx.fill();
       });
-      animFrameRef.current = requestAnimationFrame(animate);
     };
     animate();
 

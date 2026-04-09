@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, TrendingUp, Tag, Eye } from 'lucide-react';
@@ -112,4 +113,4 @@ const ItemCard = ({ item, index = 0 }) => {
   );
 };
 
-export default ItemCard;
+export default React.memo(ItemCard);

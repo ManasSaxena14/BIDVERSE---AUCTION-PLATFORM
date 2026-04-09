@@ -30,7 +30,7 @@ const Home = () => {
 
   useEffect(() => {
     const search = searchParams.get('search');
-    fetchItems(search ? { search, limit: 100 } : { limit: 100 }).catch(() => {});
+    fetchItems(search ? { search, limit: 100, status: 'active' } : { limit: 100, status: 'active' }).catch(() => {});
   }, [searchParams]);
 
   // Enhanced GSAP Hero Animation
