@@ -1,10 +1,19 @@
-# BidVerse -- Premium Auction Platform
-
-BidVerse is an institutional-grade digital auction ecosystem engineered for high-fidelity marketplace operations. The platform orchestrates the complete auction lifecycle -- from asset listing and real-time competitive bidding through to automated commission settlement -- within a modular, security-hardened MERN stack architecture. It integrates AI-powered assistance via Groq SDK (Llama 3.3 70B), an XP-driven gamification engine, and a multi-dimensional superadmin governance dashboard.
+<div align="center">
+  <h1>🏛️ BidVerse — Premium Auction Platform</h1>
+  <p><em>An institutional-grade digital auction ecosystem engineered for high-fidelity marketplace operations.</em></p>
+  
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+  [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://reactjs.org/)
+  [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+  [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.0-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+</div>
 
 ---
 
-### Deployment Links
+The platform orchestrates the complete auction lifecycle — from asset listing and real-time competitive bidding through to automated commission settlement — within a modular, security-hardened MERN stack architecture. It integrates AI-powered assistance via Groq SDK (Llama 3.3 70B), an XP-driven gamification engine, and a multi-dimensional superadmin governance dashboard.
+
+### 🚀 Deployment Links
 
 *   **Live Marketplace (Frontend):** [bidverse-auction-platform.vercel.app](https://bidverse-auction-platform.vercel.app/)
 *   **Infrastructure API (Backend):** [bidverse-auction-platform.onrender.com](https://bidverse-auction-platform.onrender.com)
@@ -12,30 +21,31 @@ BidVerse is an institutional-grade digital auction ecosystem engineered for high
 
 ---
 
-## Table of Contents
+## 📑 Table of Contents
 
-1. [System Architecture](#system-architecture)
-2. [Technical Stack](#technical-stack)
-3. [Core Features](#core-features)
-4. [Data Modeling](#data-modeling)
-5. [API Reference](#api-reference)
-6. [Security Architecture](#security-architecture)
-7. [Frontend Architecture](#frontend-architecture)
-8. [Deployment Topology](#deployment-topology)
-9. [Quick Start Guide](#quick-start-guide)
-10. [Environment Variables](#environment-variables)
-11. [Project Metrics](#project-metrics)
-12. [Contributing](#contributing)
-13. [Future Roadmap](#future-roadmap)
-14. [License](#license)
+1. [System Architecture](#-system-architecture)
+2. [Technical Stack](#-technical-stack)
+3. [Core Features](#-core-features)
+4. [Data Modeling](#-data-modeling)
+5. [API Reference](#-api-reference)
+6. [Security Architecture](#-security-architecture)
+7. [Frontend Architecture](#-frontend-architecture)
+8. [Deployment Topology](#-deployment-topology)
+9. [Quick Start Guide](#-quick-start-guide)
+10. [Environment Variables](#-environment-variables)
+11. [Project Metrics](#-project-metrics)
+12. [Troubleshooting](#-troubleshooting)
+13. [Contributing](#-contributing)
+14. [Future Roadmap](#-future-roadmap)
+15. [License](#-license)
 
 ---
 
-## System Architecture
+## 🏗️ System Architecture
 
 ### High-Level Overview
 
-```
+```text
 +------------------------------+         +-------------------------------+
 |        FRONTEND (SPA)        |  HTTPS  |        BACKEND (REST API)     |
 |  React.js + Vite + Tailwind  | ------> |  Node.js + Express.js (MVC)   |
@@ -50,31 +60,32 @@ BidVerse is an institutional-grade digital auction ecosystem engineered for high
                                 +-----------------+     +-----------------+
 ```
 
-### Backend -- Modular MVC Architecture
+### Backend — Modular MVC Architecture
 
 The backend enforces strict separation of concerns through a layered MVC pattern:
 
 | Layer | Directory | Responsibility |
 |:---|:---|:---|
-| **Configuration** | `config/` | Database connection management (MongoDB Atlas) |
-| **Models** | `models/` | Mongoose schema definitions, validation rules, static methods, pre-save hooks, compound indexes |
-| **Controllers** | `controllers/` | Isolated business logic for each domain (8 controllers) |
-| **Routes** | `routes/` | RESTful endpoint definitions with middleware chaining (8 route modules) |
-| **Middleware** | `middleware/` | Authentication, role-based authorization, centralized error handling |
-| **Utilities** | `utils/` | Custom error response class |
+| **⚙️ Configuration** | `config/` | Database connection management (MongoDB Atlas) |
+| **🗂️ Models** | `models/` | Mongoose schema definitions, validation rules, static methods, pre-save hooks, compound indexes |
+| **🧠 Controllers** | `controllers/` | Isolated business logic for each domain (8 controllers) |
+| **🛣️ Routes** | `routes/` | RESTful endpoint definitions with middleware chaining (8 route modules) |
+| **🛡️ Middleware** | `middleware/` | Authentication, role-based authorization, centralized error handling |
+| **🛠️ Utilities** | `utils/` | Custom error response class |
 
-### Frontend -- Component-Driven SPA
+### Frontend — Component-Driven SPA
 
 | Layer | Directory | Contents |
 |:---|:---|:---|
-| **Pages** | `src/pages/` | 18 page-level route components |
-| **Components** | `src/components/` | 16 reusable UI components |
-| **Context** | `src/context/` | 6 context providers for global state |
-| **Services** | `src/services/` | Centralized Axios API client with interceptors |
+| **📄 Pages** | `src/pages/` | 18 page-level route components |
+| **🧩 Components**| `src/components/` | 16 reusable UI components |
+| **🌐 Context** | `src/context/` | 6 context providers for global state |
+| **🔌 Services** | `src/services/` | Centralized Axios API client with interceptors |
 
-### Project Structure
+<details>
+<summary><b>Click to expand full Project Structure</b></summary>
 
-```
+```text
 BIDVERSE---AUCTION-PLATFORM/
 |
 +-- backend/
@@ -130,10 +141,11 @@ BIDVERSE---AUCTION-PLATFORM/
 |
 +-- README.md
 ```
+</details>
 
 ---
 
-## Technical Stack
+## 💻 Technical Stack
 
 | Category | Technologies |
 |:---|:---|
@@ -146,7 +158,7 @@ BIDVERSE---AUCTION-PLATFORM/
 | **Backend Runtime** | Node.js (v18+) |
 | **Backend Framework** | Express.js 4 (Modular MVC) |
 | **Database** | MongoDB Atlas (Mongoose 8 ODM) |
-| **AI Integration** | Groq SDK -- Llama 3.3 70B Versatile |
+| **AI Integration** | Groq SDK — Llama 3.3 70B Versatile |
 | **Authentication** | JSON Web Tokens (jsonwebtoken) |
 | **Encryption** | bcryptjs (salt rounds: 10) |
 | **Security** | Helmet.js, express-rate-limit, CORS |
@@ -158,51 +170,32 @@ BIDVERSE---AUCTION-PLATFORM/
 
 ---
 
-## Core Features
+## ✨ Core Features
 
-### Real-Time Bidding Engine
-
+### ⏱️ Real-Time Bidding Engine
 The bidding subsystem enforces strict server-side validation at every stage:
+- **Chronological integrity** — Bids are rejected once the auction end date has passed or the item status is "closed."
+- **Financial integrity** — Every bid must strictly exceed the current highest bid and meet or exceed the starting price.
+- **Idempotent bid upsert** — If a user already has a bid on an item, subsequent bids update the existing record rather than creating duplicates.
+- **Automatic valuation recalculation** — Upon bid creation, update, or deletion, the `currentBid` is recalculated from the highest remaining bid, or reverted to the starting price if no bids remain.
+- **Countdown timer** — Client-side `AuctionTimer` component renders a real-time countdown to the auction end date.
+- **Automated status expiration** — A static method on the AuctionItem model batch-transitions all expired auctions to "closed" before any query is served.
 
-- **Chronological integrity** -- Bids are rejected once the auction end date has passed or the item status is "closed."
-- **Financial integrity** -- Every bid must strictly exceed the current highest bid and meet or exceed the starting price.
-- **Idempotent bid upsert** -- If a user already has a bid on an item, subsequent bids update the existing record rather than creating duplicates.
-- **Automatic valuation recalculation** -- Upon bid creation, update, or deletion, the `currentBid` is recalculated from the highest remaining bid, or reverted to the starting price if no bids remain.
-- **Countdown timer** -- Client-side `AuctionTimer` component renders a real-time countdown to the auction end date.
-- **Automated status expiration** -- A static method on the AuctionItem model batch-transitions all expired auctions to "closed" before any query is served.
-
-### AI Virtual Concierge
-
+### 🤖 AI Virtual Concierge
 An AI-powered chatbot accessible as a persistent floating widget on every page:
-
 - **Model:** Groq SDK calling `llama-3.3-70b-versatile` with sub-100ms inference.
 - **Persona:** Luxury auction house concierge with platform-specific knowledge (navigation, bidding mechanics, account roles, categories).
 - **Guardrails:** Strict system prompt preventing model identity disclosure and off-topic responses.
 - **Conversation Memory:** Full conversation history transmitted with each request for multi-turn contextual dialogue.
 - **Parameters:** Temperature 0.5, max tokens 1024, top_p 1.
 
-### Superadmin Governance Dashboard
-
+### 👑 Superadmin Governance Dashboard
 Multi-dimensional control center with three tabbed views:
+- **Overview Tab:** Aggregate statistics: users (by role), auctions (active/closed), bids, total volume. Financial intelligence via MongoDB aggregation pipelines. 6-month revenue trend chart & category density breakdown. Top 5 bidders and auctioneers.
+- **Users Tab:** Paginated user registry with search, role filtering, role reassignment, and identity suspension toggle. Cascade user deletion support.
+- **Activity Tab:** Real-time feed of latest bids, registrations, and item listings.
 
-**Overview Tab:**
-- Aggregate statistics: users (by role), auctions (active/closed), bids, total volume.
-- Financial intelligence via MongoDB aggregation pipelines: income, expenses, net commission.
-- 6-month revenue trend chart (Recharts AreaChart).
-- Category density breakdown (Recharts PieChart).
-- Top 5 bidders and auctioneers (MongoDB `$group` + `$lookup` aggregation).
-
-**Users Tab:**
-- Paginated user registry with search and role filtering.
-- Inline role reassignment dropdown.
-- Identity suspension toggle (active/inactive).
-- Cascade user deletion: purges all bids, items, and associated data.
-
-**Activity Tab:**
-- Real-time feed of latest bids, registrations, and item listings.
-
-### Automated Commission Engine
-
+### 💰 Automated Commission Engine
 - Settlement creation restricted to closed auctions only.
 - Locates winning bid and records settlement with configurable commission rate (default 10%).
 - Pre-save hook auto-calculates `commissionAmount` and `sellerPayout`.
@@ -210,226 +203,160 @@ Multi-dimensional control center with three tabbed views:
 - Duplicate settlement protection per auction item.
 - Non-superadmin users restricted to their own commission records.
 
-### Gamification and Progression System
+### 🎮 Gamification and Progression System
 
 **XP-Based Leveling (6 tiers):**
-
 | Level | Tier | Threshold |
-|:---|:---|:---|
-| 1 | Novice | 0 bids |
-| 2 | Bronze | 3+ bids |
-| 3 | Silver | 10+ bids |
-| 4 | Gold | 25+ bids |
-| 5 | Platinum | 50+ bids |
-| 6 | Diamond | 100+ bids |
+|:---:|:---|:---|
+| 1 | 🥉 Novice | 0 bids |
+| 2 | 🥈 Bronze | 3+ bids |
+| 3 | 🥇 Silver | 10+ bids |
+| 4 | 🏆 Gold | 25+ bids |
+| 5 | 💎 Platinum | 50+ bids |
+| 6 | 👑 Diamond | 100+ bids |
 
 **Achievement Badges (8 badges, 4 rarity tiers):**
-
 | Badge | Condition | Rarity |
 |:---|:---|:---|
-| First Bid | 1+ bid placed | Bronze |
-| High Roller | Bid of $1,000+ | Gold |
-| On Fire | 3+ auction wins | Silver |
-| Creator | Created first listing | Bronze |
-| Top Bidder | Rank 1 on leaderboard | Diamond |
-| Collector | 10+ items won | Gold |
-| Veteran | 30+ days on platform | Silver |
-| Elite | Top 5 by volume | Diamond |
+| **First Bid** | 1+ bid placed | Bronze |
+| **High Roller** | Bid of $1,000+ | Gold |
+| **On Fire** | 3+ auction wins | Silver |
+| **Creator** | Created first listing | Bronze |
+| **Top Bidder** | Rank 1 on leaderboard | Diamond |
+| **Collector** | 10+ items won | Gold |
+| **Veteran** | 30+ days on platform | Silver |
+| **Elite** | Top 5 by volume | Diamond |
 
-### Prestige Leaderboard
-
-- **Grand Podium** -- Top 3 bidders displayed on animated 3D-style podium:
+### 🏆 Prestige Leaderboard
+- **Grand Podium** — Top 3 bidders displayed on animated 3D-style podium:
   - Rank 1: "Grandmaster" (gold accent, pulsing glow, crown icon)
   - Rank 2: "Elite" (silver accent, monolith pillar)
   - Rank 3: "Veteran" (bronze accent, medal icon)
-- **Roster Table** -- Full ranked table with avatar, badges, level progress bar, item count, and portfolio volume.
+- **Roster Table** — Full ranked table with avatar, badges, level progress bar, item count, and portfolio volume.
 - Framer Motion animations: staggered entry, hover shimmer, floating icons.
 
-### Additional Features
-
-- **Review System** -- Post-auction reviews for participating bidders.
-- **User Profiles** -- Account details, statistics, and activity history with editing support.
-- **Category Discovery** -- Visual category cards with filtered item listings.
-- **Responsive Design** -- Dark-mode-first with glassmorphism, ambient particles, and gradient overlays.
+### 📌 Additional Features
+- **Review System** — Post-auction reviews for participating bidders.
+- **User Profiles** — Account details, statistics, and activity history with editing support.
+- **Category Discovery** — Visual category cards with filtered item listings.
+- **Responsive Design** — Dark-mode-first with glassmorphism, ambient particles, and gradient overlays.
 
 ---
 
-## Data Modeling
+## 🗄️ Data Modeling
 
 Five Mongoose schemas with validation, hooks, and indexing:
 
-### User Schema
-- Fields: `name`, `email` (unique), `password` (min 6), `role` (bidder/auctioneer/superadmin), `status` (active/inactive), `createdAt`.
-- Pre-save: bcrypt password hashing (10 salt rounds).
-- Method: `comparePassword` for credential verification.
-
-### AuctionItem Schema
-- Fields: `title`, `description`, `startingPrice`, `currentBid`, `category`, `image`, `createdBy` (ref: User), `endDate`, `status` (active/closed), `createdAt`.
-- **5 compound indexes:** `{status, endDate}`, `{category, status}`, `{currentBid}`, `{title+description: text}`, `{createdBy}`.
-- Virtual: `isExpired`.
-- Statics: `updateExpiredItems`, `findWithUpdatedStatus`, `updateCurrentBid`.
-
-### Bid Schema
-- Fields: `user` (ref: User), `item` (ref: AuctionItem), `amount`, `createdAt`.
-
-### Commission Schema
-- Fields: `auctionItem`, `seller`, `winner`, `finalBidAmount`, `commissionRate` (0-100, default 10), `commissionAmount`, `sellerPayout`, `status` (pending/paid/cancelled), `paidAt`, `createdAt`.
-- Pre-save: auto-calculates commission and payout on creation.
-
-### Review Schema
-- Fields: reviewer, auction reference, rating, comment, createdAt.
+- **👤 User Schema:** Fields: `name`, `email` (unique), `password` (min 6), `role` (bidder/auctioneer/superadmin), `status` (active/inactive), `createdAt`. Pre-save: bcrypt password hashing (10 salt rounds). Method: `comparePassword` for credential verification.
+- **📦 AuctionItem Schema:** Fields: `title`, `description`, `startingPrice`, `currentBid`, `category`, `image`, `createdBy` (ref: User), `endDate`, `status` (active/closed), `createdAt`. **5 compound indexes:** `{status, endDate}`, `{category, status}`, `{currentBid}`, `{title+description: text}`, `{createdBy}`. Virtual: `isExpired`. Statics: `updateExpiredItems`, `findWithUpdatedStatus`, `updateCurrentBid`.
+- **💵 Bid Schema:** Fields: `user` (ref: User), `item` (ref: AuctionItem), `amount`, `createdAt`.
+- **🧾 Commission Schema:** Fields: `auctionItem`, `seller`, `winner`, `finalBidAmount`, `commissionRate` (0-100, default 10), `commissionAmount`, `sellerPayout`, `status` (pending/paid/cancelled), `paidAt`, `createdAt`. Pre-save: auto-calculates commission and payout on creation.
+- **⭐ Review Schema:** Fields: `reviewer`, `auction reference`, `rating`, `comment`, `createdAt`.
 
 ---
 
-## API Reference
+## 🔌 API Reference
 
-### Authentication -- `/api/auth`
+> **Base URL:** `/api/v1`
 
+### 🔐 Authentication (`/api/auth`)
 | Method | Endpoint | Description | Access |
 |:---|:---|:---|:---|
-| POST | `/signup` | Register new user | Public |
-| POST | `/login` | Authenticate and receive JWT | Public |
-| GET | `/me` | Retrieve authenticated user | Private |
+| `POST` | `/signup` | Register new user | Public |
+| `POST` | `/login` | Authenticate and receive JWT | Public |
+| `GET` | `/me` | Retrieve authenticated user | Private |
 
-### Auction Items -- `/api/items`
-
+### 🏷️ Auction Items (`/api/items`)
 | Method | Endpoint | Description | Access |
 |:---|:---|:---|:---|
-| GET | `/` | List items (filter, paginate, search, sort) | Public |
-| GET | `/:id` | Single item details | Public |
-| POST | `/` | Create auction listing | Auctioneer / Superadmin |
-| PUT | `/:id` | Update listing | Owner / Superadmin |
-| DELETE | `/:id` | Delete listing | Owner / Superadmin |
+| `GET` | `/` | List items (filter, paginate, search, sort) | Public |
+| `GET` | `/:id` | Single item details | Public |
+| `POST` | `/` | Create auction listing | Auctioneer / Superadmin |
+| `PUT` | `/:id` | Update listing | Owner / Superadmin |
+| `DELETE` | `/:id` | Delete listing | Owner / Superadmin |
 
-### Bids -- `/api/bids`
-
+### 💸 Bids (`/api/bids`)
 | Method | Endpoint | Description | Access |
 |:---|:---|:---|:---|
-| GET | `/` | List bids (filter, sort, paginate) | Private |
-| GET | `/:id` | Single bid | Private |
-| POST | `/` | Place or update bid | Bidder / Superadmin |
-| PUT | `/:id` | Modify bid amount | Owner / Superadmin |
-| DELETE | `/:id` | Rescind bid | Owner / Superadmin |
+| `GET` | `/` | List bids (filter, sort, paginate) | Private |
+| `GET` | `/:id` | Single bid | Private |
+| `POST` | `/` | Place or update bid | Bidder / Superadmin |
+| `PUT` | `/:id` | Modify bid amount | Owner / Superadmin |
+| `DELETE` | `/:id` | Rescind bid | Owner / Superadmin |
 
-### Commissions -- `/api/commissions`
-
+### 📊 Commissions (`/api/commissions`)
 | Method | Endpoint | Description | Access |
 |:---|:---|:---|:---|
-| GET | `/` | List settlements | Seller / Superadmin |
-| GET | `/:id` | Single settlement record | Seller / Superadmin |
-| POST | `/` | Create settlement for closed auction | Superadmin |
-| PUT | `/:id/status` | Update settlement status | Superadmin |
-| DELETE | `/:id` | Rescind settlement | Superadmin |
+| `GET` | `/` | List settlements | Seller / Superadmin |
+| `GET` | `/:id` | Single settlement record | Seller / Superadmin |
+| `POST` | `/` | Create settlement for closed auction | Superadmin |
+| `PUT` | `/:id/status` | Update settlement status | Superadmin |
+| `DELETE` | `/:id` | Rescind settlement | Superadmin |
 
-### Reviews -- `/api/reviews`
-
+### 🗣️ Reviews (`/api/reviews`) & 👥 Users (`/api/users`)
 | Method | Endpoint | Description | Access |
 |:---|:---|:---|:---|
-| POST | `/` | Submit review | Participating Bidder |
-| DELETE | `/:id` | Remove review | Reviewer / Superadmin |
+| `POST` | `/reviews` | Submit review | Participating Bidder |
+| `DELETE` | `/reviews/:id` | Remove review | Reviewer / Superadmin |
+| `GET` | `/users/profile` | Get user profile | Private |
+| `PUT` | `/users/profile` | Update profile | Private |
 
-### Users -- `/api/users`
-
+### 🛡️ Superadmin Governance (`/api/superadmin`)
 | Method | Endpoint | Description | Access |
 |:---|:---|:---|:---|
-| GET | `/profile` | Get user profile | Private |
-| PUT | `/profile` | Update profile | Private |
+| `GET` | `/stats` | Platform statistics (6 aggregation pipelines) | Superadmin |
+| `GET` | `/activities` | Recent activity feed | Superadmin |
+| `GET` | `/users` | Paginated user registry | Superadmin |
+| `PUT` | `/users/:id/role` | Reassign user role | Superadmin |
+| `PUT` | `/users/:id/status` | Toggle user status | Superadmin |
+| `DELETE` | `/users/:id` | Cascade delete user | Superadmin |
+| `DELETE` | `/items/:id` | Force delete item | Superadmin |
+| `DELETE` | `/bids/:id` | Force delete bid (with recalculation) | Superadmin |
 
-### Superadmin Governance -- `/api/superadmin`
-
+### 🤖 AI Chat (`/api/chat`)
 | Method | Endpoint | Description | Access |
 |:---|:---|:---|:---|
-| GET | `/stats` | Platform statistics (6 aggregation pipelines) | Superadmin |
-| GET | `/activities` | Recent activity feed | Superadmin |
-| GET | `/users` | Paginated user registry | Superadmin |
-| PUT | `/users/:id/role` | Reassign user role | Superadmin |
-| PUT | `/users/:id/status` | Toggle user status | Superadmin |
-| DELETE | `/users/:id` | Cascade delete user | Superadmin |
-| DELETE | `/items/:id` | Force delete item | Superadmin |
-| DELETE | `/bids/:id` | Force delete bid (with recalculation) | Superadmin |
-
-### AI Chat -- `/api/chat`
-
-| Method | Endpoint | Description | Access |
-|:---|:---|:---|:---|
-| POST | `/` | Send message to AI concierge | Public |
+| `POST` | `/` | Send message to AI concierge | Public |
 
 ---
 
-## Security Architecture
+## 🔒 Security Architecture
 
-### Authentication
-- Stateless JWT tokens with 30-day expiration.
-- Identity verified against database on every protected request.
-- Suspended users are immediately locked out.
+### Authentication & Access Control (RBAC)
+- **Stateless JWT tokens** with 30-day expiration. Identity verified against database on every protected request. Suspended users are immediately locked out.
+- **3-tier RBAC:**
+  - **Bidder:** View items, place/update/delete own bids, submit reviews.
+  - **Auctioneer:** All bidder permissions + create/update/delete own items.
+  - **Superadmin:** Full system control. Cannot suspend their own account or be created via public signup.
 
-### Role-Based Access Control (3-tier RBAC)
-
-| Role | Capabilities |
-|:---|:---|
-| **Bidder** | View items, place/update/delete own bids, submit reviews |
-| **Auctioneer** | All bidder permissions + create/update/delete own items |
-| **Superadmin** | Full system control: any CRUD, user governance, commission management |
-
-- Superadmin cannot suspend their own account.
-- Superadmin accounts cannot be created via public signup.
-
-### Data Protection
-- bcryptjs with 10 salt rounds; passwords excluded from all API responses.
-- Helmet.js for security headers (CSP, X-Frame-Options, etc.).
-- express-validator for input sanitization.
-
-### Rate Limiting
-
-| Tier | Scope | Window | Max Requests |
-|:---|:---|:---|:---|
-| Standard | All `/api/` routes | 15 min | 100 |
-| Strict | `/api/auth/login`, `/api/auth/signup`, `/api/bids` | 15 min | 30 |
-
-### CORS
-- Configurable allowed origins via `ALLOWED_ORIGINS` env variable.
-- Credentials enabled for cross-origin authenticated requests.
+### Data Protection & Limits
+- **Encryption:** bcryptjs with 10 salt rounds; passwords excluded from all API responses.
+- **Protection:** Helmet.js for security headers, express-validator for input sanitization.
+- **Rate Limiting:** Standard API routes limited to 100 req/15min. Auth and bidding routes strictly limited to 30 req/15min.
+- **CORS:** Configurable allowed origins via `ALLOWED_ORIGINS` env variable. Credentials enabled.
 
 ---
 
-## Frontend Architecture
+## 🎨 Frontend Architecture
 
 ### Pages (18)
+| Category | Routes |
+|:---|:---|
+| **Public** | `/` (Home), `/about`, `/how-it-works`, `/categories`, `/category/:name`, `/items/:id`, `/auction/:id` |
+| **Auth** | `/signup`, `/login` |
+| **Account** | `/profile`, `/edit-profile`, `/leaderboard` |
+| **Actions** | `/place-bid/:id`, `/update-bid/:id`, `/create-item`, `/update-item/:id`, `/my-auctions` |
+| **Admin** | `/admin-dashboard` |
 
-| Page | Route | Description |
-|:---|:---|:---|
-| Home | `/` | Landing with hero, featured auctions, stats, testimonials |
-| Signup | `/signup` | Registration form |
-| Login | `/login` | Authentication form |
-| ItemDetails | `/items/:id` | Full item view with bid history and reviews |
-| CreateItem | `/create-item` | Listing creation (Auctioneer) |
-| UpdateItem | `/update-item/:id` | Edit listing |
-| PlaceBid | `/place-bid/:id` | Bid placement |
-| UpdateBid | `/update-bid/:id` | Bid modification |
-| Categories | `/categories` | Category grid |
-| CategoryItems | `/category/:name` | Filtered item listings |
-| Leaderboard | `/leaderboard` | Global rankings with podium |
-| UserProfile | `/profile` | Account and statistics |
-| EditProfile | `/edit-profile` | Profile editing |
-| ViewMyAuctions | `/my-auctions` | Auctioneer listing management |
-| ViewAuctionDetails | `/auction/:id` | Detailed auction view |
-| AdminDashboard | `/admin-dashboard` | Superadmin governance |
-| About | `/about` | Platform info |
-| HowItWorks | `/how-it-works` | User guide |
-
-### Components (16)
-
-Navbar, Footer, ItemCard, AuctionTimer, BidList, BidModal, Chatbot, GamificationBadge, StatsCard, ReviewForm, NotificationDropdown, ParticleBackground, Testimonials, Toast, ProtectedRoute, ErrorBoundary.
-
-### State Management (6 Context Providers)
-
-AuthContext, ItemContext, BidContext, ReviewContext, ToastContext, ThemeContext.
+### Components & State (16 Components, 6 Contexts)
+**Components:** Navbar, Footer, ItemCard, AuctionTimer, BidList, BidModal, Chatbot, GamificationBadge, StatsCard, ReviewForm, NotificationDropdown, ParticleBackground, Testimonials, Toast, ProtectedRoute, ErrorBoundary.
+**State Contexts:** AuthContext, ItemContext, BidContext, ReviewContext, ToastContext, ThemeContext.
 
 ---
 
-## Deployment Topology
+## 🌍 Deployment Topology
 
-```
+```text
                      Users
                        |
                        v
@@ -454,49 +381,39 @@ AuthContext, ItemContext, BidContext, ReviewContext, ToastContext, ThemeContext.
 
 ---
 
-## Quick Start Guide
+## 🚀 Quick Start Guide
 
 ### Prerequisites
-
-- Node.js (v18+)
-- npm
+- Node.js (v18+) & npm
 - MongoDB Atlas account
 - Groq API Key ([console.groq.com](https://console.groq.com))
 
-### 1. Clone the Repository
-
+### 1. Clone & Setup
 ```bash
 git clone https://github.com/ManasSaxena14/BIDVERSE---AUCTION-PLATFORM.git
 cd BIDVERSE---AUCTION-PLATFORM
 ```
 
 ### 2. Backend Setup
-
 ```bash
 cd backend
 npm install
 cp .env.example .env
-```
-
-Edit `.env` with your credentials (see [Environment Variables](#environment-variables) below), then:
-
-```bash
 npm run dev
 ```
-
-Backend will run on `http://localhost:6001`.
+*(Backend runs on `http://localhost:6001`)*
 
 ### 3. Frontend Setup
-
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-Frontend will run on `http://localhost:5173`.
+*(Frontend runs on `http://localhost:5173`)*
 
 ### 4. Testing API Endpoints
+<details>
+<summary><b>View sample cURL commands</b></summary>
 
 **Register a user:**
 ```bash
@@ -533,105 +450,75 @@ curl -X POST http://localhost:6001/api/items \
     "endDate": "2026-12-31T23:59:59.000Z"
   }'
 ```
+</details>
 
-> **Note:** Superadmin accounts cannot be created via the signup API. They must be manually created directly in MongoDB Atlas.
+> 💡 **Note:** Superadmin accounts cannot be created via the signup API. They must be manually created directly in MongoDB Atlas.
 
 ---
 
-## Environment Variables
+## ⚙️ Environment Variables
 
 ### Backend (`backend/.env`)
-
 | Variable | Description | Required | Default |
-|:---|:---|:---|:---|
-| `MONGO_URI` | MongoDB Atlas connection string | Yes | -- |
-| `JWT_SECRET` | Secret key for JWT signing | Yes | -- |
-| `PORT` | Server port | No | 6001 |
-| `NODE_ENV` | Environment mode | No | development |
-| `GROQ_API_KEY` | Groq SDK API key for AI concierge | Yes | -- |
-| `ALLOWED_ORIGINS` | Comma-separated CORS whitelist | No | http://localhost:3000 |
+|:---|:---|:---:|:---:|
+| `MONGO_URI` | MongoDB Atlas connection string | ✅ | - |
+| `JWT_SECRET` | Secret key for JWT signing | ✅ | - |
+| `PORT` | Server port | ❌ | `6001` |
+| `NODE_ENV` | Environment mode | ❌ | `development` |
+| `GROQ_API_KEY` | Groq SDK API key for AI concierge | ✅ | - |
+| `ALLOWED_ORIGINS`| Comma-separated CORS whitelist | ❌ | `http://localhost:3000` |
 
 ### Frontend (`frontend/.env.development`)
-
 | Variable | Description | Required |
-|:---|:---|:---|
-| `VITE_API_URL` | Backend API base URL | Yes |
+|:---|:---|:---:|
+| `VITE_API_URL` | Backend API base URL | ✅ |
 
 ---
 
-## Project Metrics
+## 📈 Project Metrics
 
-| Metric | Count |
-|:---|:---|
-| Backend Controllers | 8 |
-| Backend Route Modules | 8 |
-| Database Models | 5 |
-| Database Indexes | 5 (AuctionItem) |
-| API Endpoints | 30+ |
-| Frontend Pages | 18 |
-| Frontend Components | 16 |
-| Context Providers | 6 |
-| User Roles | 3 |
-| Gamification Badges | 8 |
-| Progression Tiers | 6 |
-| Security Layers | 5 |
-| Backend Dependencies | 11 |
-| Frontend Dependencies | 11 |
+| Category | Metric | Count |
+|:---|:---|:---:|
+| **Backend** | Controllers / Route Modules | 8 / 8 |
+| | Database Models / Indexes | 5 / 5 |
+| | API Endpoints | 30+ |
+| **Frontend** | Pages / Components | 18 / 16 |
+| | Context Providers | 6 |
+| **Platform** | User Roles | 3 |
+| | Gamification Badges / Tiers | 8 / 6 |
+| | Security Layers | 5 |
 
 ---
 
-## Troubleshooting
+## 🛠️ Troubleshooting
 
-### MongoDB Connection Error
-- Verify `MONGO_URI` in `.env` is correct.
-- Ensure your IP address is whitelisted in MongoDB Atlas Network Access.
-- Confirm username and password credentials.
-
-### JWT Token Expired
-- Re-authenticate via `/api/auth/login` to receive a new token.
-- Tokens expire after 30 days by default.
-
-### Permission Denied (403)
-- Verify your user role matches the endpoint's access requirements.
-- Check if you are the owner of the resource being modified.
-
-### AI Concierge Not Responding
-- Verify `GROQ_API_KEY` is set correctly in backend `.env`.
-- Confirm the Groq API quota has not been exhausted.
+- **MongoDB Connection Error:** Verify `MONGO_URI` in `.env`, ensure IP address is whitelisted in Atlas Network Access, and confirm credentials.
+- **JWT Token Expired:** Re-authenticate via `/api/auth/login`. Tokens expire after 30 days.
+- **Permission Denied (403):** Verify user role matches access requirements and you own the resource being modified.
+- **AI Concierge Not Responding:** Verify `GROQ_API_KEY` is set in backend `.env` and API quota is not exhausted.
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository.
-2. Create a feature branch:
-   ```bash
-   git checkout -b feature/YourFeature
-   ```
-3. Commit your changes:
-   ```bash
-   git commit -m "Add YourFeature"
-   ```
-4. Push to the branch:
-   ```bash
-   git push origin feature/YourFeature
-   ```
+2. Create a feature branch: `git checkout -b feature/YourFeature`
+3. Commit your changes: `git commit -m "Add YourFeature"`
+4. Push to the branch: `git push origin feature/YourFeature`
 5. Open a Pull Request.
 
 ---
 
-## Future Roadmap
+## 🔮 Future Roadmap
 
-| Initiative | Description |
-|:---|:---|
-| **WebSocket Integration** | Full-duplex communication for instantaneous bid propagation and live notifications. |
-| **Payment Gateway** | Secure payment processing (Stripe/Razorpay) for automated escrow and transaction clearance. |
-| **Image Upload** | Cloud-based storage (Cloudinary/AWS S3) replacing placeholder URLs. |
-| **Push Notifications** | Server-side alerts for outbid events, auction endings, and settlement updates. |
-| **Advanced Search** | Elasticsearch integration for faceted search and filtering. |
+- ⚡ **WebSocket Integration:** Full-duplex communication for instantaneous bid propagation and live notifications.
+- 💳 **Payment Gateway:** Secure payment processing (Stripe/Razorpay) for automated escrow and transaction clearance.
+- 🖼️ **Image Upload:** Cloud-based storage (Cloudinary/AWS S3) replacing placeholder URLs.
+- 🔔 **Push Notifications:** Server-side alerts for outbid events, auction endings, and settlement updates.
+- 🔍 **Advanced Search:** Elasticsearch integration for faceted search and filtering.
 
 ---
 
-## License
+## 📄 License
 
-Distributed under the MIT License.
+Distributed under the **MIT License**.
